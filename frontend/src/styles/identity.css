@@ -1,0 +1,130 @@
+.identity-page {
+  max-width: 760px;
+}
+.team-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin: 24px 0;
+}
+.team-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+  gap: 24px;
+}
+.team-card {
+  border: 1px solid #e0dbd0;
+  border-radius: 12px;
+  padding: 20px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.team-card pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: 0.85rem;
+}
+.team-card .identity-form {
+  margin-bottom: 0;
+}
+.identity-page--wide {
+  max-width: 1180px;
+}
+.identity-page > p {
+  margin: 16px 0;
+}
+.identity-form {
+  display: grid;
+  gap: 20px;
+  margin: 28px 0;
+}
+.identity-form label {
+  display: grid;
+  gap: 6px;
+  font-weight: 600;
+}
+.identity-form input:not([type="checkbox"]),
+.identity-form textarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #d8d2c5;
+  border-radius: 8px;
+  background: white;
+  color: #354638;
+  min-height: 44px;
+  font: inherit;
+  font-weight: 400;
+}
+.identity-form textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+.identity-form fieldset {
+  display: grid;
+  gap: 18px;
+  border: 1px solid #e0dbd0;
+  border-radius: 12px;
+  padding: 20px;
+  min-width: 0;
+}
+.identity-form legend {
+  font-weight: 600;
+  padding: 0 8px;
+}
+.identity-form .check-label {
+  display: flex;
+  align-items: start;
+  gap: 12px;
+  font-weight: 400;
+}
+.check-label input {
+  width: 20px;
+  height: 20px;
+  flex: none;
+  margin: 3px 0;
+  accent-color: #354638;
+}
+.identity-form .button {
+  justify-self: start;
+}
+.identity-form button:disabled {
+  opacity: 0.65;
+}
+.form-error {
+  padding: 12px;
+  border-left: 3px solid #a67554;
+}
+.draft-notice {
+  border: 1px solid #a67554;
+  border-radius: 8px;
+  padding: 16px;
+}
+.profile-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 36px;
+}
+.policy-copy {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  margin-top: 24px;
+}
+.desktop-actions .text-button {
+  text-decoration: none;
+}
+.identity-form input[readonly] {
+  background: #edf1ea;
+}
+.identity-form :disabled {
+  cursor: default;
+}
+.identity-form fieldset:disabled {
+  opacity: 0.8;
+}
+@media (max-width: 800px) {
+  .profile-columns {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+}

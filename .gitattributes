@@ -1,0 +1,7 @@
+# Preservar byte a byte las referencias y los recursos oficiales.
+*.pdf binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.woff binary
+*.woff2 binary

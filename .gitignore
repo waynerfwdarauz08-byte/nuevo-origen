@@ -1,0 +1,61 @@
+**/node_modules/
+**/dist/
+**/.env
+**/.env.*
+!**/.env.example
+.local/
+**/coverage/
+
+# Compilados, cachés y temporales
+**/build/
+**/.vite/
+**/.cache/
+**/.tmp/
+**/tmp/
+**/temp/
+*.log
+*.log.*
+*.tmp
+*.temp
+*.swp
+*.swo
+*.tsbuildinfo
+.DS_Store
+Thumbs.db
+
+# Credenciales, claves y certificados privados
+**/.aws/
+**/.ssh/
+**/credentials.json
+**/credentials.*.json
+**/service-account*.json
+**/secrets/
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.keystore
+id_rsa*
+id_ed25519*
+.npmrc
+.netrc
+
+# Datos locales MySQL, respaldos y archivos de pruebas subidos
+**/mysql-data/
+**/mysql-files/
+**/backups/
+**/backup/
+**/dumps/
+**/uploads/
+*.sql
+*.sql.gz
+*.sql.zip
+*.dump
+*.bak
+
+# Copia de referencia y artefactos temporales de AI Studio.
+# Los recursos necesarios ya están en frontend/src/assets y los PDF en referencias.
+docs/referencias/prototipo-ai-studio/
+**/.aistudio/
+**/.tempmediaStorage/

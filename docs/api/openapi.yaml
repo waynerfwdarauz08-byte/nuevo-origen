@@ -1,0 +1,538 @@
+openapi: 3.0.3
+info:
+  title: Nuevo Origen — identidad local
+  version: 0.3.0
+  description: >-
+    Base local, sin despliegue. Registro y login emiten cookie HttpOnly.
+    Antes de cada mutación obtener /api/auth/csrf con cookies y enviar el token
+    recibido en X-CSRF-Token, Content-Type application/json y Origin autorizado.
+    El token CSRF queda ligado a la sesión y cambia al iniciar/cerrar sesión.
+    Campos extra rechazados. Invitaciones con entrega manual solo en desarrollo;
+    no se envía correo. Recuperación por correo pendiente. Todas las rutas de
+    equipo exigen administrador_empresa y equipo.gestionar de la sesión actual.
+servers:
+  - url: http://127.0.0.1:3001
+paths:
+  /api/health:
+    get:
+      summary: Salud del proceso, independiente de MySQL
+      responses:
+        '200':
+          description: Proceso disponible; JSON con status ok y requestId.
+  /api/health/ready:
+    get:
+      summary: Comprueba conexión real con MySQL, sin exponer credenciales ni catálogo
+      responses:
+        '200':
+          description: JSON con status ready, database up y requestId.
+        '503':
+          description: JSON con status unavailable, database down y requestId.
+  /api/auth/csrf:
+    get:
+      summary: Obtener desafío CSRF ligado a cookie anónima o sesión actual
+      responses:
+        '200':
+          description: Emite nonce en cookie HttpOnly si falta. No guardar el token en URLs ni localStorage.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [csrfToken]
+                properties:
+                  csrfToken: {type: string, minLength: 64, maxLength: 64}
+        '403': {$ref: '#/components/responses/Denied'}
+  /api/politicas:
+    get:
+      summary: Borradores versionados seleccionados exclusivamente para pruebas locales
+      responses:
+        '200':
+          description: Dos textos íntegros, tipo terminos o privacidad, estado borrador, versión y aviso local.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  aviso: {type: string}
+                  politicas:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: {type: string}
+                        tipo: {type: string, enum: [terminos, privacidad]}
+                        version: {type: string}
+                        estado: {type: string, enum: [borrador]}
+                        contenido: {type: string}
+        '503': {$ref: '#/components/responses/Unavailable'}
+  /api/auth/registro:
+    post:
+      summary: Crear empresa, administrador, aceptaciones y sesión en una transacción
+      description: No admite roles, empresa_id, estado ni permisos. Correo de acceso único. Registros limitados por IP.
+      parameters: [{$ref: '#/components/parameters/Origin'}]
+      security: [{CsrfToken: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/Registro'}
+      responses:
+        '201': {$ref: '#/components/responses/Session'}
+        '400': {$ref: '#/components/responses/Invalid'}
+        '403': {$ref: '#/components/responses/Denied'}
+        '409':
+          description: Datos duplicados (mensaje genérico) o versión de política desactualizada; no crea empresa parcial.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Error'}
+        '429': {$ref: '#/components/responses/Limited'}
+        '503': {$ref: '#/components/responses/Unavailable'}
+  /api/auth/login:
+    post:
+      summary: Iniciar una sesión real de duración absoluta configurable
+      parameters: [{$ref: '#/components/parameters/Origin'}]
+      security: [{CsrfToken: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [correo, password]
+              properties:
+                correo: {type: string, format: email, maxLength: 254}
+                password: {type: string, minLength: 1, maxLength: 72, writeOnly: true, description: Máximo 72 bytes UTF-8.}
+      responses:
+        '200': {$ref: '#/components/responses/Session'}
+        '400': {$ref: '#/components/responses/Invalid'}
+        '401': {$ref: '#/components/responses/Unauthenticated'}
+        '403': {$ref: '#/components/responses/Denied'}
+        '429': {$ref: '#/components/responses/Limited'}
+  /api/auth/sesion:
+    get:
+      summary: Consultar identidad y permisos vigentes desde MySQL, no desde roles enviados por cliente
+      security: [{SessionCookie: []}]
+      responses:
+        '200': {$ref: '#/components/responses/Session'}
+        '401': {$ref: '#/components/responses/Unauthenticated'}
+  /api/auth/logout:
+    post:
+      summary: Revocar la sesión correspondiente en MySQL y borrar su cookie
+      parameters: [{$ref: '#/components/parameters/Origin'}]
+      security: [{SessionCookie: [], CsrfToken: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {type: object, example: {}}
+      responses:
+        '204': {description: Sesión revocada; una copia de la cookie no vuelve a autorizar.}
+        '401': {$ref: '#/components/responses/Unauthenticated'}
+        '403': {$ref: '#/components/responses/Denied'}
+  /api/mi-cuenta:
+    get:
+      summary: Perfil propio y versiones y fechas de aceptaciones locales
+      security: [{SessionCookie: []}]
+      responses:
+        '200': {description: 'id, nombre, correo, empresa_id y aceptaciones; sin hash ni tokens.'}
+        '401': {$ref: '#/components/responses/Unauthenticated'}
+    patch:
+      summary: Editar exclusivamente el nombre personal
+      description: No permite cambiar correo, roles, empresa, contraseña ni estado. No puede retirar al último administrador.
+      parameters: [{$ref: '#/components/parameters/Origin'}]
+      security: [{SessionCookie: [], CsrfToken: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [nombre]
+              properties:
+                nombre: {type: string, minLength: 1, maxLength: 120}
+      responses:
+        '200': {description: Perfil propio actualizado sin campos sensibles.}
+        '400': {$ref: '#/components/responses/Invalid'}
+        '401': {$ref: '#/components/responses/Unauthenticated'}
+        '403': {$ref: '#/components/responses/Denied'}
+  /api/mi-empresa:
+    get:
+      summary: Perfil privado de la empresa resuelta desde la sesión; requiere perfil.leer
+      security: [{SessionCookie: []}]
+      responses:
+        '200':
+          description: Solo empresa propia, incluidos sus contactos y dirección privados autorizados.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Empresa'}
+        '401': {$ref: '#/components/responses/Unauthenticated'}
+        '403': {$ref: '#/components/responses/Denied'}
+        '404': {$ref: '#/components/responses/NotFound'}
+    patch:
+      summary: Editar campos autorizados de la empresa propia; requiere perfil.gestionar
+      parameters: [{$ref: '#/components/parameters/Origin'}]
+      security: [{SessionCookie: [], CsrfToken: []}]
+      requestBody: {$ref: '#/components/requestBodies/EmpresaPatch'}
+      responses:
+        '200': {description: Empresa propia actualizada.}
+        '400': {$ref: '#/components/responses/Invalid'}
+        '401': {$ref: '#/components/responses/Unauthenticated'}
+        '403': {$ref: '#/components/responses/Denied'}
+        '404': {$ref: '#/components/responses/NotFound'}
+  /api/empresas/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: {type: string, pattern: '^[0-9]+$'}
+    get:
+      summary: Consulta privada con comprobación de pertenencia; ID ajeno devuelve 404
+      security: [{SessionCookie: []}]
+      responses:
+        '200': {description: Perfil de la empresa propia.}
+        '401': {$ref: '#/components/responses/Unauthenticated'}
+        '403': {$ref: '#/components/responses/Denied'}
+        '404': {$ref: '#/components/responses/NotFound'}
+    patch:
+      summary: Edición privada con pertenencia y permiso; nunca acepta ID de otra empresa
+      parameters: [{$ref: '#/components/parameters/Origin'}]
+      security: [{SessionCookie: [], CsrfToken: []}]
+      requestBody: {$ref: '#/components/requestBodies/EmpresaPatch'}
+      responses:
+        '200': {description: Empresa propia actualizada.}
+        '400': {$ref: '#/components/responses/Invalid'}
+        '401': {$ref: '#/components/responses/Unauthenticated'}
+        '403': {$ref: '#/components/responses/Denied'}
+        '404': {$ref: '#/components/responses/NotFound'}
+  /api/equipo:
+    get:
+      summary: Integrantes de la empresa de la sesión; nunca acepta empresa de destino
+      security: [{SessionCookie: []}]
+      parameters: [{$ref: '#/components/parameters/Pagina'}]
+      responses:
+        '200':
+          description: 'miembros con id/nombre/correo/estado/funciones; pagina/total/paginas. Hasta 50 registros.'
+        '401': {$ref: '#/components/responses/Unauthenticated'}
+        '403': {$ref: '#/components/responses/Denied'}
+  /api/equipo/invitaciones:
+    get:
+      summary: Invitaciones propias sin tokens ni enlaces
+      security: [{SessionCookie: []}]
+      parameters: [{$ref: '#/components/parameters/Pagina'}]
+      responses:
+        '200': {description: 'invitaciones con id/correo/funciones/estado/vence_en/creada_en/correo_enviado false; pagina/total/paginas.'}
+        '401': {$ref: '#/components/responses/Unauthenticated'}
+        '403': {$ref: '#/components/responses/Denied'}
+    post:
+      summary: Crear invitación con entrega manual exclusiva de desarrollo y vigencia de una hora
+      parameters: [{$ref: '#/components/parameters/Origin'}]
+      security: [{SessionCookie: [], CsrfToken: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [correo, funciones]
+              properties:
+                correo: {type: string, format: email, maxLength: 254}
+                funciones:
+                  allOf: [{$ref: '#/components/schemas/Funciones'}]
+                  minItems: 1
+      responses:
+        '201':
+          description: 'invitacion segura y entrega con modo manual_desarrollo/correo_enviado false/aviso/enlace. Enlace solo en esta respuesta Cache-Control no-store; no se envió correo. Fragmento #token= secreto; no registrar ni incluir en listados.'
+        '400': {$ref: '#/components/responses/Invalid'}
+        '401': {$ref: '#/components/responses/Unauthenticated'}
+        '403': {$ref: '#/components/responses/Denied'}
+        '409': {description: Invitación pendiente duplicada o conflicto de cuenta; sin revelar cuentas existentes.}
+        '429': {$ref: '#/components/responses/Limited'}
+        '503': {description: Entrega manual deshabilitada fuera de desarrollo; no crea invitación ni simula correo.}
+  /api/equipo/invitaciones/{id}/revocar:
+    parameters: [{$ref: '#/components/parameters/Id'}]
+    post:
+      summary: Revocar invitación propia; no elimina datos ni revierte aceptaciones
+      parameters: [{$ref: '#/components/parameters/Origin'}]
+      security: [{SessionCookie: [], CsrfToken: []}]
+      requestBody: {$ref: '#/components/requestBodies/Motivo'}
+      responses:
+        '200': {description: Invitación revocada sin token. Repetir es idempotente.}
+        '400': {$ref: '#/components/responses/Invalid'}
+        '401': {$ref: '#/components/responses/Unauthenticated'}
+        '403': {$ref: '#/components/responses/Denied'}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '409': {description: Invitación ya aceptada.}
+  /api/equipo/miembros/{id}/funciones:
+    parameters: [{$ref: '#/components/parameters/Id'}]
+    patch:
+      summary: Sustituir funciones combinables propias; retiro efectivo en sesiones abiertas
+      description: Transacción con bloqueo de empresa y autoridad revalidada. Revoca invitaciones pendientes del emisor si pierde administración. No permite roles globales.
+      parameters: [{$ref: '#/components/parameters/Origin'}]
+      security: [{SessionCookie: [], CsrfToken: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [funciones, motivo]
+              properties:
+                funciones: {$ref: '#/components/schemas/Funciones'}
+                motivo: {type: string, minLength: 3, maxLength: 500}
+      responses:
+        '200': {description: Integrante con funciones actualizadas. Lista vacía retira todos los permisos empresariales.}
+        '400': {$ref: '#/components/responses/Invalid'}
+        '401': {$ref: '#/components/responses/Unauthenticated'}
+        '403': {$ref: '#/components/responses/Denied'}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '409': {description: LAST_ADMIN o MEMBER_INACTIVE. Se requiere reemplazo del último administrador activo incluso bajo concurrencia.}
+  /api/equipo/miembros/{id}/desactivar:
+    parameters: [{$ref: '#/components/parameters/Id'}]
+    post:
+      summary: Desactivar integrante propio y revocar todas sus sesiones e invitaciones pendientes
+      parameters: [{$ref: '#/components/parameters/Origin'}]
+      security: [{SessionCookie: [], CsrfToken: []}]
+      requestBody: {$ref: '#/components/requestBodies/Motivo'}
+      responses:
+        '200': {description: Integrante inactivo; repetir es idempotente. No borra empresa ni usuario.}
+        '400': {$ref: '#/components/responses/Invalid'}
+        '401': {$ref: '#/components/responses/Unauthenticated'}
+        '403': {$ref: '#/components/responses/Denied'}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '409': {description: LAST_ADMIN; requiere reemplazo activo.}
+  /api/equipo/auditoria:
+    get:
+      summary: Cambios del equipo de la empresa propia con actor y requestId; nunca tokens
+      security: [{SessionCookie: []}]
+      parameters: [{$ref: '#/components/parameters/Pagina'}]
+      responses:
+        '200': {description: 'eventos con id/actor_id/accion/recurso_tipo/recurso_id/request_id/fecha/motivo/detalle; pagina/total/paginas.'}
+        '401': {$ref: '#/components/responses/Unauthenticated'}
+        '403': {$ref: '#/components/responses/Denied'}
+  /api/invitaciones/consultar:
+    post:
+      summary: Consultar token sin consumirlo; el secreto va en JSON y nunca en URL HTTP
+      parameters: [{$ref: '#/components/parameters/Origin'}]
+      security: [{CsrfToken: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [token]
+              properties:
+                token: {$ref: '#/components/schemas/TokenInvitacion'}
+      responses:
+        '200': {description: 'empresa (nombre)/correo/funciones/aviso; no-store. No consume token.'}
+        '400': {$ref: '#/components/responses/Invalid'}
+        '403': {$ref: '#/components/responses/Denied'}
+        '410': {description: INVITATION_INVALID genérico para desconocida/vencida/usada/revocada.}
+        '429': {$ref: '#/components/responses/Limited'}
+  /api/invitaciones/aceptar:
+    post:
+      summary: Crear cuenta nueva dentro de la empresa invitante y consumir token atómicamente
+      description: No acepta correo/empresa/roles del navegador. No traslada cuentas existentes ni restablece contraseñas. Registra aceptaciones y auditoría en la misma transacción.
+      parameters: [{$ref: '#/components/parameters/Origin'}]
+      security: [{CsrfToken: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [token, nombre, password, aceptaciones]
+              properties:
+                token: {$ref: '#/components/schemas/TokenInvitacion'}
+                nombre: {type: string, minLength: 1, maxLength: 120}
+                password: {type: string, minLength: 12, maxLength: 72, writeOnly: true, description: Máximo 72 bytes UTF-8.}
+                aceptaciones: {$ref: '#/components/schemas/Registro/properties/aceptaciones'}
+                comunicaciones_opcionales: {type: boolean, default: false}
+      responses:
+        '201': {$ref: '#/components/responses/Session'}
+        '400': {$ref: '#/components/responses/Invalid'}
+        '403': {$ref: '#/components/responses/Denied'}
+        '409': {description: Versión de políticas cambiada o conflicto de cuenta; no consume token ante fallo.}
+        '410': {description: INVITATION_INVALID genérico; un solo uso incluso bajo concurrencia.}
+        '429': {$ref: '#/components/responses/Limited'}
+components:
+  securitySchemes:
+    SessionCookie:
+      type: apiKey
+      in: cookie
+      name: no_session
+      description: JWT HttpOnly revocable, ocho horas por defecto. En HTTPS productivo se llama __Host-no_session y exige Secure. No se implementa refresh.
+    CsrfToken:
+      type: apiKey
+      in: header
+      name: X-CSRF-Token
+      description: Obtener por /api/auth/csrf usando el mismo almacén de cookies.
+  parameters:
+    Pagina:
+      name: pagina
+      in: query
+      schema: {type: integer, minimum: 1, maximum: 10000, default: 1}
+    Id:
+      name: id
+      in: path
+      required: true
+      schema: {type: string, pattern: '^\d+$'}
+    Origin:
+      name: Origin
+      in: header
+      required: true
+      schema: {type: string}
+      description: Origen exacto incluido en APP_ORIGINS. Por defecto http://127.0.0.1:5173 o http://127.0.0.1:3001.
+  requestBodies:
+    Motivo:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            additionalProperties: false
+            required: [motivo]
+            properties:
+              motivo: {type: string, minLength: 3, maxLength: 500}
+    EmpresaPatch:
+      required: true
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/EmpresaCampos'}
+  schemas:
+    Funciones:
+      type: array
+      maxItems: 4
+      uniqueItems: true
+      items:
+        type: string
+        enum: [administrador_empresa, gestor_materiales, gestor_acuerdos, analista_impacto]
+    TokenInvitacion:
+      type: string
+      pattern: '^[a-f0-9]{64}$'
+      writeOnly: true
+      description: Secreto aleatorio de 256 bits; solo se persiste SHA-256. No registrar cuerpo ni enlace.
+    Registro:
+      type: object
+      additionalProperties: false
+      required: [empresa, usuario, aceptaciones]
+      properties:
+        empresa:
+          allOf:
+            - {$ref: '#/components/schemas/EmpresaCampos'}
+            - {required: [nombre, sector, correo_contacto, ubicacion_publica]}
+        usuario:
+          type: object
+          additionalProperties: false
+          required: [nombre, correo, password]
+          properties:
+            nombre: {type: string, minLength: 1, maxLength: 120}
+            correo: {type: string, format: email, maxLength: 254}
+            password: {type: string, minLength: 12, maxLength: 72, writeOnly: true, description: 'Máximo 72 bytes UTF-8, sin truncamiento.'}
+        aceptaciones:
+          type: array
+          minItems: 2
+          maxItems: 2
+          description: Una aceptación por tipo; versión debe coincidir con /api/politicas. Ninguna premarcada.
+          items:
+            type: object
+            additionalProperties: false
+            required: [tipo, version, aceptada]
+            properties:
+              tipo: {type: string, enum: [terminos, privacidad]}
+              version: {type: string, maxLength: 40}
+              aceptada: {type: boolean, enum: [true]}
+        comunicaciones_opcionales: {type: boolean, default: false, description: Preferencia separada; no se envían comunicaciones en esta etapa.}
+    EmpresaCampos:
+      type: object
+      additionalProperties: false
+      minProperties: 1
+      properties:
+        nombre: {type: string, minLength: 1, maxLength: 150}
+        sector: {type: string, minLength: 1, maxLength: 80}
+        descripcion: {type: string, maxLength: 4000}
+        correo_contacto: {type: string, format: email, maxLength: 254}
+        telefono: {type: string, maxLength: 30}
+        ubicacion_publica: {type: string, minLength: 1, maxLength: 160}
+        direccion_privada: {type: string, maxLength: 4000}
+    Empresa:
+      type: object
+      properties:
+        id: {type: string}
+        nombre: {type: string}
+        sector: {type: string}
+        descripcion: {type: string}
+        correo_contacto: {type: string}
+        telefono: {type: string}
+        ubicacion_publica: {type: string}
+        direccion_privada: {type: string}
+    Sesion:
+      type: object
+      properties:
+        usuario:
+          type: object
+          properties:
+            id: {type: string}
+            nombre: {type: string}
+            correo: {type: string}
+            empresa_id: {type: string, nullable: true}
+        empresa:
+          type: object
+          properties:
+            id: {type: string}
+            nombre: {type: string}
+          nullable: true
+        roles: {type: array, items: {type: string}}
+        permisos: {type: array, items: {type: string}}
+        vence_en: {type: string, format: date-time}
+    Error:
+      type: object
+      required: [error, requestId]
+      properties:
+        error:
+          type: object
+          properties:
+            code: {type: string}
+            message: {type: string}
+        requestId: {type: string}
+  responses:
+    Session:
+      description: Sesión vigente y cookie en registro/login; nunca devuelve JWT, contraseña ni hash en JSON.
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/Sesion'}
+    Invalid:
+      description: Campos inválidos o prohibidos. Sin valores sensibles en el mensaje.
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/Error'}
+    Unauthenticated:
+      description: Sin sesión, vencida, manipulada o revocada; login incorrecto usa mensaje genérico.
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/Error'}
+    Denied:
+      description: CSRF, origen o permiso rechazado.
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/Error'}
+    NotFound:
+      description: Recurso inexistente o perteneciente a otra empresa.
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/Error'}
+    Limited:
+      description: Límite de intentos en ventana de 15 minutos, con RateLimit y Retry-After. Almacén en memoria local.
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/Error'}
+    Unavailable:
+      description: Configuración local o datos iniciales no disponibles; detalles internos omitidos.
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/Error'}
