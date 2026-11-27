@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
-  title: Nuevo Origen — identidad local
-  version: 0.3.0
+  title: Nuevo Origen — API local
+  version: 0.6.0
   description: >-
     Base local, sin despliegue. Registro y login emiten cookie HttpOnly.
     Antes de cada mutación obtener /api/auth/csrf con cookies y enviar el token
@@ -13,6 +13,68 @@ info:
 servers:
   - url: http://127.0.0.1:3001
 paths:
+  /api/mensajeria/conversaciones: {$ref: './mensajeria.yaml#/paths/~1api~1mensajeria~1conversaciones'}
+  /api/mensajeria/conversaciones/{id}: {$ref: './mensajeria.yaml#/paths/~1api~1mensajeria~1conversaciones~1{id}'}
+  /api/mensajeria/conversaciones/{id}/mensajes: {$ref: './mensajeria.yaml#/paths/~1api~1mensajeria~1conversaciones~1{id}~1mensajes'}
+  /api/solicitudes: {$ref: './operaciones.json#/paths/~1api~1solicitudes'}
+  /api/solicitudes/{id}: {$ref: './operaciones.json#/paths/~1api~1solicitudes~1{id}'}
+  /api/solicitudes/{id}/condiciones: {$ref: './operaciones.json#/paths/~1api~1solicitudes~1{id}~1condiciones'}
+  /api/solicitudes/{id}/aceptar: {$ref: './operaciones.json#/paths/~1api~1solicitudes~1{id}~1aceptar'}
+  /api/solicitudes/{id}/rechazar: {$ref: './operaciones.json#/paths/~1api~1solicitudes~1{id}~1rechazar'}
+  /api/solicitudes/{id}/cancelar: {$ref: './operaciones.json#/paths/~1api~1solicitudes~1{id}~1cancelar'}
+  /api/solicitudes/{id}/mensajes: {$ref: './operaciones.json#/paths/~1api~1solicitudes~1{id}~1mensajes'}
+  /api/acuerdos/{id}: {$ref: './operaciones.json#/paths/~1api~1acuerdos~1{id}'}
+  /api/acuerdos/{id}/cancelar: {$ref: './operaciones.json#/paths/~1api~1acuerdos~1{id}~1cancelar'}
+  /api/acuerdos/{id}/entregas: {$ref: './operaciones.json#/paths/~1api~1acuerdos~1{id}~1entregas'}
+  /api/entregas/{id}/confirmaciones: {$ref: './operaciones.json#/paths/~1api~1entregas~1{id}~1confirmaciones'}
+  /api/entregas/{id}/evidencias: {$ref: './operaciones.json#/paths/~1api~1entregas~1{id}~1evidencias'}
+  /api/entregas/{id}/evidencias/{fileId}: {$ref: './operaciones.json#/paths/~1api~1entregas~1{id}~1evidencias~1{fileId}'}
+  /api/indicadores: {$ref: './operaciones.json#/paths/~1api~1indicadores'}
+  /api/indicadores/exportacion: {$ref: './operaciones.json#/paths/~1api~1indicadores~1exportacion'}
+  /api/seguimiento/embudo: {$ref: './operaciones.json#/paths/~1api~1seguimiento~1embudo'}
+  /api/seguimiento/atencion: {$ref: './operaciones.json#/paths/~1api~1seguimiento~1atencion'}
+  /api/notificaciones: {$ref: './operaciones.json#/paths/~1api~1notificaciones'}
+  /api/notificaciones/{id}/leida: {$ref: './operaciones.json#/paths/~1api~1notificaciones~1{id}~1leida'}
+  /api/incidencias: {$ref: './operaciones.json#/paths/~1api~1incidencias'}
+  /api/administracion/incidencias: {$ref: './operaciones.json#/paths/~1api~1administracion~1incidencias'}
+  /api/administracion/incidencias/{id}: {$ref: './operaciones.json#/paths/~1api~1administracion~1incidencias~1{id}'}
+  /api/administracion/incidencias/{id}/asignarme: {$ref: './operaciones.json#/paths/~1api~1administracion~1incidencias~1{id}~1asignarme'}
+  /api/administracion/incidencias/{id}/resolver: {$ref: './operaciones.json#/paths/~1api~1administracion~1incidencias~1{id}~1resolver'}
+  /api/administracion/incidencias/{id}/evidencias/{fileId}: {$ref: './operaciones.json#/paths/~1api~1administracion~1incidencias~1{id}~1evidencias~1{fileId}'}
+  /api/mi-cuenta/consentimientos: {$ref: './operaciones.json#/paths/~1api~1mi-cuenta~1consentimientos'}
+  /api/mi-cuenta/exportacion: {$ref: './operaciones.json#/paths/~1api~1mi-cuenta~1exportacion'}
+  /api/mi-cuenta/derechos: {$ref: './operaciones.json#/paths/~1api~1mi-cuenta~1derechos'}
+  /api/administracion/derechos: {$ref: './operaciones.json#/paths/~1api~1administracion~1derechos'}
+  /api/administracion/derechos/{id}/revisar: {$ref: './operaciones.json#/paths/~1api~1administracion~1derechos~1{id}~1revisar'}
+  /api/auth/recuperacion: {$ref: './operaciones.json#/paths/~1api~1auth~1recuperacion'}
+  /api/administracion/recuperacion: {$ref: './operaciones.json#/paths/~1api~1administracion~1recuperacion'}
+  /api/auth/restablecer: {$ref: './operaciones.json#/paths/~1api~1auth~1restablecer'}
+  /api/equipo/miembros/{id}/reactivar: {$ref: './operaciones.json#/paths/~1api~1equipo~1miembros~1{id}~1reactivar'}
+  /api/administracion/cuentas: {$ref: './operaciones.json#/paths/~1api~1administracion~1cuentas'}
+  /api/administracion/cuentas/{id}: {$ref: './operaciones.json#/paths/~1api~1administracion~1cuentas~1{id}'}
+  /api/administracion/politicas: {$ref: './operaciones.json#/paths/~1api~1administracion~1politicas'}
+  /api/administracion/auditoria: {$ref: './operaciones.json#/paths/~1api~1administracion~1auditoria'}
+  /api/catalogos/materiales: {$ref: './materiales.yaml#/paths/~1api~1catalogos~1materiales'}
+  /api/administracion/catalogos: {$ref: './materiales.yaml#/paths/~1api~1administracion~1catalogos'}
+  /api/administracion/categorias: {$ref: './materiales.yaml#/paths/~1api~1administracion~1categorias'}
+  /api/administracion/categorias/{id}: {$ref: './materiales.yaml#/paths/~1api~1administracion~1categorias~1{id}'}
+  /api/administracion/unidades: {$ref: './materiales.yaml#/paths/~1api~1administracion~1unidades'}
+  /api/administracion/unidades/{id}: {$ref: './materiales.yaml#/paths/~1api~1administracion~1unidades~1{id}'}
+  /api/administracion/propiedades: {$ref: './materiales.yaml#/paths/~1api~1administracion~1propiedades'}
+  /api/administracion/propiedades/{id}: {$ref: './materiales.yaml#/paths/~1api~1administracion~1propiedades~1{id}'}
+  /api/administracion/categorias/{id}/propiedades: {$ref: './materiales.yaml#/paths/~1api~1administracion~1categorias~1{id}~1propiedades'}
+  /api/catalogo/ofertas: {$ref: './materiales.yaml#/paths/~1api~1catalogo~1ofertas'}
+  /api/catalogo/ofertas/{id}: {$ref: './materiales.yaml#/paths/~1api~1catalogo~1ofertas~1{id}'}
+  /api/catalogo/empresas/{id}: {$ref: './materiales.yaml#/paths/~1api~1catalogo~1empresas~1{id}'}
+  /api/catalogo/ofertas/{id}/fotos/{fileId}: {$ref: './materiales.yaml#/paths/~1api~1catalogo~1ofertas~1{id}~1fotos~1{fileId}'}
+  /api/ofertas: {$ref: './materiales.yaml#/paths/~1api~1ofertas'}
+  /api/ofertas/{id}: {$ref: './materiales.yaml#/paths/~1api~1ofertas~1{id}'}
+  /api/ofertas/{id}/estado: {$ref: './materiales.yaml#/paths/~1api~1ofertas~1{id}~1estado'}
+  /api/ofertas/{id}/fotos: {$ref: './materiales.yaml#/paths/~1api~1ofertas~1{id}~1fotos'}
+  /api/ofertas/{id}/fotos/{fileId}: {$ref: './materiales.yaml#/paths/~1api~1ofertas~1{id}~1fotos~1{fileId}'}
+  /api/necesidades: {$ref: './materiales.yaml#/paths/~1api~1necesidades'}
+  /api/necesidades/{id}: {$ref: './materiales.yaml#/paths/~1api~1necesidades~1{id}'}
+  /api/necesidades/{id}/estado: {$ref: './materiales.yaml#/paths/~1api~1necesidades~1{id}~1estado'}
   /api/health:
     get:
       summary: Salud del proceso, independiente de MySQL

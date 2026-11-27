@@ -79,3 +79,27 @@ para divulgarlos, indexarlos o enviarlos a un proveedor de IA.
 - Elegir proveedores y regiones.
 - Definir responsables y contacto.
 - Validar finalidades y políticas antes de publicación.
+
+## Implementación local observada — 2026-11-26
+
+- Conversaciones restringidas a empresas participantes con acuerdos.gestionar;
+  indicadores y exportaciones empresariales no incluyen sus contenidos.
+- Acuerdos conservan condiciones, unidades, precios y fichas aceptadas como
+  historial de negocio; no se reescriben por editar una oferta posteriormente.
+- Evidencia fotográfica privada ligada a entrega. Descarga por participantes
+  autorizados o revisor de caso asignado, con auditoría en este último acceso.
+  Sin URLs públicas permanentes ni acceso global ordinario a conversaciones.
+- Avisos de interfaz: referencia de evento/ruta y lectura propia; sin correo.
+- Solicitudes de derechos: titular, tipo, detalle, verificación y revisión. No se
+  ejecuta eliminación ni se promete tratamiento de proveedores no conectados.
+- Recuperación: solo hash del token, vencimiento y uso/revocación; enlace manual
+  mostrado una vez al administrador de plataforma autorizado en desarrollo.
+- Exportación propia actual acotada: perfil, aceptaciones, consentimientos e
+  historial de derechos. No se declara exportación exhaustiva de comunicaciones.
+- Cuentas globales y versiones de borradores separadas de empresas. Auditoría
+  global de referencias; los datos de casos no aparecen en su listado general.
+- Esquema actual y campos: `docs/referencias/DER-implementado-local.md`.
+
+Necesidades ya definidas como privadas en ADR 0009. Proveedores externos,
+regiones, acceso de responsables, conservación de negocio y resolución integral
+de bajas continúan pendientes; los controles locales no cierran esos riesgos.

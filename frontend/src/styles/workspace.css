@@ -1,0 +1,286 @@
+.workspace {
+  display: grid;
+  grid-template-columns: 224px minmax(0, 1fr);
+  gap: 28px;
+  max-width: 1440px;
+  margin: 32px auto 72px;
+  padding: 0 32px;
+  align-items: start;
+}
+.workspace-sidebar {
+  position: sticky;
+  top: 24px;
+  min-width: 0;
+}
+.workspace-identity {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 8px 8px 24px;
+  overflow-wrap: anywhere;
+}
+.workspace-identity strong,
+.workspace-identity span:not(.workspace-avatar) {
+  display: block;
+  font-size: 0.85rem;
+}
+.workspace-identity div > span {
+  color: var(--muted);
+  margin-top: 4px;
+}
+.workspace-avatar {
+  display: grid;
+  place-items: center;
+  flex: 0 0 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--moss);
+  color: var(--warm);
+  font-weight: 600;
+}
+.workspace-nav {
+  display: grid;
+  gap: 5px;
+}
+.workspace-nav a {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 11px 14px;
+  text-decoration: none;
+  border-radius: 9px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  border: 1px solid transparent;
+}
+.workspace-nav a:hover {
+  background: #e8eade;
+}
+.workspace-nav a.active {
+  background: var(--moss);
+  color: var(--warm);
+  border-color: var(--moss);
+}
+.workspace-content {
+  min-width: 0;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  box-shadow: 0 4px 20px #35463805;
+}
+.workspace-content:focus {
+  outline: none;
+}
+.workspace-content > .section {
+  max-width: none;
+  margin: 0;
+  padding: 32px;
+  width: 100%;
+}
+.workspace h1 {
+  font-size: 2.25rem;
+  line-height: 1.15;
+  margin-bottom: 20px;
+}
+.workspace h2 {
+  font-size: 1.5rem;
+}
+.workspace :is(input, select, textarea) {
+  min-width: 0;
+  max-width: 100%;
+  font: inherit;
+  color: inherit;
+}
+.workspace textarea:focus-visible {
+  outline: 2px solid var(--moss);
+  outline-offset: 3px;
+}
+.workspace button:not(.button):not(.text-button) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 10px 16px;
+  border: 1px solid #35463859;
+  border-radius: 8px;
+  background: white;
+  color: var(--moss);
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.workspace button:not(.button):not(.text-button):hover {
+  background: var(--sage);
+}
+.workspace :is(button, .button) {
+  transition:
+    background-color 0.15s,
+    border-color 0.15s;
+  white-space: normal;
+  text-align: center;
+  max-width: 100%;
+}
+.workspace button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.workspace button[aria-busy="true"] {
+  cursor: wait;
+}
+.workspace .button.secondary {
+  background: white;
+  color: var(--moss);
+}
+.workspace .button.secondary:hover {
+  background: var(--sage);
+}
+.workspace .button.danger {
+  background: white;
+  border-color: var(--earth);
+  color: #65422e;
+}
+.workspace .button.danger:hover {
+  background: #f6eee6;
+}
+.workspace .identity-form > button {
+  justify-self: start;
+}
+.workspace .identity-form fieldset {
+  background: #fafbf8;
+}
+.workspace .identity-form :is(input:not([type="checkbox"]), textarea, select) {
+  border: 1px solid #c9cec4;
+  border-radius: 8px;
+  padding: 11px 12px;
+  background: white;
+  min-height: 44px;
+  width: 100%;
+}
+.workspace .identity-form :is(.check-label, .check-row) {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-weight: 400;
+}
+.workspace input[type="checkbox"] {
+  accent-color: var(--moss);
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
+  margin: 3px 0;
+}
+.workspace .team-card {
+  background: #fff;
+}
+.workspace .draft-notice {
+  background: #faf8f1;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 20px;
+}
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--line);
+  background: var(--warm);
+  border-radius: 999px;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  font-weight: 600;
+  padding: 5px 10px;
+  overflow-wrap: anywhere;
+}
+.status-badge--positive {
+  background: var(--sage);
+  border-color: #c9d4c3;
+}
+.workspace .material-heading {
+  align-items: center;
+}
+.workspace .operation-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 20px 0;
+}
+.workspace .team-grid {
+  gap: 16px;
+}
+.workspace .team-card p {
+  overflow-wrap: anywhere;
+}
+.workspace .identity-card {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 20px;
+  margin: 20px 0;
+}
+.workspace .presentation-note {
+  line-height: 1.6;
+}
+@media (max-width: 1023px) {
+  .workspace {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 20px;
+    padding: 0 24px;
+    margin-top: 24px;
+  }
+  .workspace-sidebar {
+    position: static;
+  }
+  .workspace-identity {
+    padding: 0 0 12px;
+  }
+  .workspace-nav {
+    display: flex;
+    overflow-x: auto;
+    gap: 6px;
+    padding: 2px 2px 10px;
+  }
+  .workspace-nav a {
+    white-space: nowrap;
+    flex: none;
+  }
+  .workspace-content > .section {
+    padding: 24px;
+  }
+  .workspace h1 {
+    font-size: 2rem;
+  }
+}
+@media (max-width: 599px) {
+  .workspace {
+    padding: 0 12px;
+    gap: 12px;
+    margin-top: 16px;
+  }
+  .workspace-content {
+    border-radius: 12px;
+  }
+  .workspace-content > .section {
+    padding: 20px 16px;
+  }
+  .workspace h1 {
+    font-size: 1.75rem;
+  }
+  .workspace .material-heading {
+    align-items: flex-start;
+    gap: 14px;
+  }
+  .workspace .identity-form fieldset {
+    padding: 16px;
+  }
+  .workspace .operation-actions .button {
+    flex: 1 1 auto;
+  }
+  .workspace .team-card {
+    padding: 16px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .workspace :is(button, .button) {
+    transition: none;
+  }
+}

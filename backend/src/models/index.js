@@ -20,4 +20,13 @@ const models = {
   RolPermiso,
   ...require("./identity")(sequelize, { Rol, Permiso }),
 };
-module.exports = { ...models, ...require("./team")(sequelize, models) };
+const domain = {
+  ...models,
+  ...require("./team")(sequelize, models),
+  ...require("./materials")(sequelize, models),
+};
+module.exports = {
+  ...domain,
+  ...require("./operations")(sequelize, domain),
+  ...require("./rights")(sequelize),
+};

@@ -521,6 +521,30 @@ function createTeamService(m, identity, config) {
         return reloadMember(member.id, transaction);
       });
     },
+    async reactivate(auth, id, data, requestId) {
+      return manage(auth, async (transaction) => {
+        const member = await targetMember(auth, id, transaction);
+        if (member.estado !== "inactivo")
+          fail(
+            409,
+            "MEMBER_STATE",
+            "Solo se puede reactivar un integrante inactivo.",
+          );
+        await member.update({ estado: "activo" }, { transaction });
+        await audit(
+          auth.user.id,
+          auth.company.id,
+          "miembro.reactivado",
+          "usuario",
+          member.id,
+          requestId,
+          data.motivo,
+          { antes: "inactivo", despues: "activo" },
+          transaction,
+        );
+        return reloadMember(member.id, transaction);
+      });
+    },
     async inspect(token) {
       const { invite } = await candidate(token);
       const company = await m.Empresa.findOne({

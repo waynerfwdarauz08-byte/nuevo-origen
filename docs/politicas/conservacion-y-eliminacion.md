@@ -102,3 +102,19 @@ No ejecutar purgas productivas sin procedimiento autorizado.
 - Capacidades de proveedores.
 - Responsables.
 - Evidencia de eliminación y restauración.
+
+## 9. Alcance técnico local observado — 2026-11-26
+
+Hay recepción de solicitudes con contraseña actual, historial y revisión humana
+pendiente. No hay ejecución automática de baja ni anonimización; no se presenta
+una solicitud recibida como eliminación cumplida (ADR 0012).
+
+Existe una herramienta local para revisar y, con `--apply`, purgar metadatos de
+tokens terminales suficientemente antiguos. Modo por defecto sin cambios;
+transacción y auditoría mínima sin token. La comprobación de desarrollo reportó
+cero candidatos; la eliminación se probó solo con metadatos ficticios de pruebas.
+No equivale a limpieza programada, eliminación documental ni purga productiva.
+
+Acuerdos, entregas, evidencias y auditoría permanecen conservados. Su plazo,
+restricción y tratamiento tras una baja requieren decisión validada antes de
+implementar supresión. Respaldos y proveedores externos siguen pendientes.

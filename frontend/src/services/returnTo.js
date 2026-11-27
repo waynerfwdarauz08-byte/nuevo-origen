@@ -11,8 +11,30 @@ export function safeReturn(value) {
     const url = new URL(value, "https://local.invalid");
     if (
       url.origin !== "https://local.invalid" ||
-      !["/", "/estado", "/mi-espacio", "/mi-espacio/equipo"].includes(
-        url.pathname,
+      !(
+        [
+          "/",
+          "/estado",
+          "/mi-espacio",
+          "/mi-espacio/equipo",
+          "/catalogo",
+          "/mi-espacio/catalogos",
+          "/mi-espacio/incidencias",
+          "/mi-espacio/derechos",
+          "/mi-espacio/plataforma",
+          "/mi-espacio/solicitudes",
+          "/mi-espacio/solicitudes/nueva",
+          "/mi-espacio/indicadores",
+          "/mi-espacio/avisos",
+          "/mi-espacio/mensajes",
+        ].includes(url.pathname) ||
+        /^\/(materiales|empresas)\/[1-9]\d*$/.test(url.pathname) ||
+        /^\/mi-espacio\/(solicitudes|acuerdos|mensajes)\/[1-9]\d*$/.test(
+          url.pathname,
+        ) ||
+        /^\/mi-espacio\/(ofertas|necesidades)(\/(nueva|[1-9]\d*))?$/.test(
+          url.pathname,
+        )
       )
     )
       return "/mi-espacio";

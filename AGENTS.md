@@ -76,7 +76,8 @@ No usar los usuarios de demostración como mecanismo de autenticación.
 Arquitectura objetivo:
 - Frontend: React, Vite, JavaScript/JSX y React Router.
 - Backend: Node.js y Express.
-- Base de datos: MySQL.
+- Base de datos actual: MySQL local aislado. Destino autorizado: PostgreSQL en
+  Supabase; migración pendiente de ensayo y evidencia (ADR 0010).
 - ORM: Sequelize.
 - Migraciones y seeders reproducibles.
 - IA: integración desde backend, con proveedor y modelo configurables.
@@ -92,8 +93,9 @@ responsive pendientes. No rediseñarlo durante la etapa de identidad.
 Antes de cada integración se cerrarán proveedor/modelo aplicable, tratamiento
 de datos y configuración. El alojamiento productivo se definirá antes del
 despliegue; desarrollo y pruebas tendrán entornos separados. Las consignas
-académicas originales no están adjuntas: si aparecen exigencias previas más
-estrictas, identificar el requisito y conciliarlo antes de apartarse de él.
+académicas originales se localizaron en Downloads el 2026-11-26: permiten
+PostgreSQL (página física 6 del Proyecto Final). Ver ADR 0010 y trazabilidad local;
+no trasladar el miniproyecto de admisiones del taller CRM al dominio B2B.
 
 No elegir un proveedor de IA por el hecho de que el prototipo venga
 de Google AI Studio.
@@ -276,6 +278,39 @@ deben bloquear la empresa y revalidar al actor dentro de la transacción para
 proteger al último administrador activo incluso bajo concurrencia.
 Las validaciones manuales reportadas por el responsable se identifican como
 tales; no atribuirlas al agente ni extenderlas a pantallas posteriores.
+
+ADR 0009 amplía la etapa local a categorías, unidades, propiedades, ofertas,
+necesidades y catálogo público. Mantener decimales exactos, permisos por empresa,
+campos públicos explícitos y descarga de fotos condicionada a la publicación.
+Solo plataforma autorizada administra catálogos; el alta empresarial nunca
+concede roles globales. Las fotografías locales no sustituyen el almacenamiento
+productivo pendiente. Necesidades privadas en esta etapa; no exponerlas por defecto.
+
+ADR 0011 amplía la operación local a solicitudes, propuestas versionadas,
+reservas bilaterales, entregas, confirmaciones, discrepancias e indicadores SQL.
+No sumar impacto sin uso confirmado por ambas empresas. Moderación trabaja
+sobre casos asignados con auditoría; no confirma ni negocia por las empresas.
+ADR 0012 registra exportación propia, consentimientos, recuperación manual de
+plataforma solo en desarrollo y solicitudes de derechos. Recibir una solicitud
+no ejecuta eliminación: excepciones y resolución final siguen pendientes.
+ADR 0013 separa cuentas globales de empresariales y protege la última
+administración de plataforma mediante bloqueo y revalidación transaccional.
+Los borradores versionados no son políticas definitivas. Ver preparación de
+producción antes de migrar o desplegar; configuración actual continúa local.
+
+ADR 0014 separa mensajería de la revisión de condiciones: conversación por
+solicitud, accesible desde acuerdos, con permisos vigentes, cursores y reintentos
+idempotentes. No simular presencia, lectura ni WebSockets. Mantener menú privado
+común y no convertir mensajes en aceptaciones o confirmaciones automáticas.
+El marco privado nuevo requiere repetir revisión manual; no extender evidencias
+visuales anteriores a esta versión por el solo hecho de compilarla.
+
+ADR 0014 separa mensajería de la revisión de condiciones: conversación por
+solicitud, accesible desde acuerdos, con permisos vigentes, cursores y reintentos
+idempotentes. No simular presencia, lectura ni WebSockets. Mantener menú privado
+común y no convertir mensajes en aceptaciones o confirmaciones automáticas.
+El marco privado nuevo requiere repetir revisión manual; no extender evidencias
+visuales anteriores a esta versión por el solo hecho de compilarla.
 
 Cada función se considera terminada cuando:
 - Tiene comportamiento real.

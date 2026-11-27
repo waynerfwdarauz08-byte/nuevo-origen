@@ -109,6 +109,35 @@ function Member({ member, run, busy }) {
             )}
           </>
         )}
+        {member.estado === "inactivo" && (
+          <>
+            <label>
+              Motivo de reactivación
+              <input
+                required
+                minLength={3}
+                maxLength={500}
+                value={reason}
+                onChange={(e) => setReason(e.target.value)}
+              />
+            </label>
+            <button
+              type="button"
+              disabled={busy || reason.trim().length < 3}
+              onClick={() =>
+                run(`/equipo/miembros/${member.id}/reactivar`, {
+                  motivo: reason,
+                })
+              }
+            >
+              Reactivar con sus funciones anteriores
+            </button>
+            <p>
+              Debe iniciar sesión nuevamente. Las sesiones e invitaciones
+              revocadas no se recuperan.
+            </p>
+          </>
+        )}
       </form>
     </article>
   );

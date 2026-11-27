@@ -60,7 +60,7 @@ export default function LayoutPublico() {
   }
   const navigation = (
     <>
-      <Link to="/#materiales">Materiales</Link>
+      <Link to="/catalogo">Materiales</Link>
       <Link to="/#como-funciona">Cómo funciona</Link>
       <Link to="/#sobre-nuevo-origen">Sobre Nuevo Origen</Link>
     </>
@@ -133,7 +133,7 @@ export default function LayoutPublico() {
               </p>
             </div>
             <nav aria-label="Enlaces del pie de página">
-              <Link to="/#materiales">Materiales</Link>
+              <Link to="/catalogo">Materiales</Link>
               <Link to="/#como-funciona">Cómo funciona</Link>
               <button
                 onClick={() =>

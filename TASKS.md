@@ -10,6 +10,10 @@
 
 ## Estado de partida
 
+Actualización 2026-11-27: mensajería independiente y marco privado común
+implementados según ADR 0014. Evidencia y pendientes al final de este documento;
+la revisión manual previa no se extiende al marco nuevo.
+
 Frontend y backend se construirán desde cero con JavaScript/JSX,
 por instrucción del responsable del proyecto del 2026-11-24 (ADR 0004).
 Construcción técnica desde cero con el prototipo de AI Studio como referencia visual; sin reutilización de su código.
@@ -17,7 +21,9 @@ El prototipo es referencia visual concreta para el inicio (ADR 0006); no se
 trasladará ni adaptará su código. Se permite reutilizar archivos visuales suministrados.
 La base técnica no depende del prototipo. La inspección inicial no encontró
 código; ahora existe la base local descrita en la evidencia de esta etapa.
-La identidad real ya está implementada; catálogo, acuerdos e integraciones siguen pendientes.
+Identidad, catálogo y operación local implementados con evidencia API/MySQL.
+Gobernanza parcialmente implementada; conexiones externas, migración PostgreSQL
+y despliegue pendientes. La revisión manual previa no cubre pantallas nuevas.
 
 ## 0. Documentación
 
@@ -62,16 +68,17 @@ Sin publicación ni proveedores externos.
 
 EN PROCESO: entrega local según ADR 0007. Inicio aceptado provisionalmente;
 ajustes visuales pendientes. Validación manual previa reportada por el responsable;
-las pantallas nuevas de equipo aún requieren su propia revisión. Sin rediseño.
+las pantallas nuevas de recuperación y plataforma aún requieren su revisión. Sin rediseño.
 
 - [x] Registro empresarial y administrador por API en una transacción, con reversión probada.
 - [x] Aceptaciones versionadas de dos borradores locales y preferencia opcional separada.
 - [x] Contraseñas bcrypt 12 y sesión JWT HttpOnly persistida y verificada en MySQL.
 - [x] Cierre y revocación de sesión; rechazo de cookie revocada y sesión expirada.
 - [x] CSRF en mutaciones, comprobación de origen, validación estricta y límites locales de intentos.
-- [ ] Recuperación con tokens de uso único y vencimiento.
+- [x] Recuperación local por token seguro, de uso único y con vencimiento; emisión manual de plataforma en desarrollo, sin correo. Pruebas en evidencia de operación.
+- [ ] Recuperación productiva mediante canal de entrega autorizado y comprobado.
 - [x] API de integrantes, invitaciones y auditoría; entrega manual solo en desarrollo sin simular correo. Pruebas en evidencia de equipo abajo.
-- [x] Pantallas de equipo y aceptación integradas al espacio privado/público existente; compilación verificada. Recorrido manual nuevo pendiente por separado.
+- [x] Pantallas de equipo y aceptación integradas; compilación verificada y recorrido manual reportado por el responsable el 2026-11-26.
 - [x] Unión de permisos de funciones empresariales combinadas y lectura vigente en cada petición; probado con fixtures en base de pruebas.
 - [x] Gestión de funciones combinables, desactivación y protección transaccional del último administrador; pruebas de concurrencia y revalidación del actor ejecutadas.
 - [x] Permisos por empresa y recurso en perfiles implementados; sin IDs/roles confiados al navegador.
@@ -81,7 +88,7 @@ las pantallas nuevas de equipo aún requieren su propia revisión. Sin rediseño
 - [x] Retorno público validado sin redirección externa ni ejecución automática de acciones.
 - [x] Registro, acceso, edición y persistencia de perfiles: validación manual reportada por el responsable.
 - [x] Teclado y responsive a 360/768/1440 px: validación manual reportada por el responsable para la versión previa a equipo.
-- [ ] Revisión manual de las nuevas pantallas de equipo e invitaciones y su regresión visual; ajustes visuales siguen pendientes.
+- [x] Recorrido de equipo/invitaciones y teclado/responsive reportado por el responsable el 2026-11-26 («listo, todo funciona» tras la lista de comprobaciones). Validación manual reportada, no automatizada ni observada por el agente. No cubre materiales añadidos después; ajustes visuales siguen pendientes.
 
 ### Validación manual reportada por el responsable — 2026-11-24
 
@@ -136,12 +143,14 @@ de equipo añadidas posteriormente. Los ajustes visuales permanecen pendientes.
   no se extiende a ellas.
 
 Pendientes específicos:
-- [ ] Recorrido manual nuevo de invitación/aceptación, funciones, desactivación y auditoría.
-- [ ] Teclado y responsive 360/768/1440 px en pantallas nuevas y regresión visual.
+- [x] Recorrido de invitación/aceptación, funciones, desactivación y auditoría: validación manual reportada por el responsable el 2026-11-26.
+- [x] Teclado y responsive 360/768/1440 px de equipo: validación manual reportada por el responsable; no acredita fidelidad visual final ni materiales posteriores.
 - [ ] Ajustes visuales previamente pendientes.
 - [ ] Elegir proveedor de correo, tratamiento de datos y configuración antes de integrarlo.
-- [ ] Reactivación y tratamiento de cuentas ya registradas/invitación a otra empresa, sin transferencias implícitas.
-- [ ] Limpieza de tokens a 30 días y conservación mínima de auditoría según gobernanza.
+- [x] Reactivación local probada por API; conserva funciones, sin reabrir sesiones ni invitaciones revocadas.
+- [ ] Invitación de cuentas ya registradas/a otra empresa; sin transferencias implícitas.
+- [x] Herramienta local de revisión/purga de metadatos terminales a 30 días, con auditoría y prueba en base exclusiva.
+- [ ] Programación productiva de limpieza y plazos definitivos de auditoría.
 - [ ] Recuperación por correo, invitaciones productivas y pruebas de entrega real.
 
 ### Evidencia de identidad — 2026-11-24
@@ -197,27 +206,84 @@ Pendientes específicos:
 
 ## 3. Catálogo y materiales
 
-- [ ] Categorías, unidades y propiedades.
-- [ ] Crear, editar y consultar ofertas.
-- [ ] Necesidades de materiales.
-- [ ] Validación y estados de publicación.
-- [ ] Imágenes y archivos autorizados.
-- [ ] Catálogo y filtros conectados a API.
-- [ ] Perfil empresarial público.
-- [ ] Moderación.
+- [x] Categorías, unidades, propiedades y plantillas administrables por plataforma; ocho categorías iniciales sin límite fijo.
+- [x] Crear, editar y consultar ofertas propias persistidas; permisos vigentes y campos estrictos.
+- [x] Necesidades privadas, propiedades/intervalos, fecha opcional y estados; sin exposición pública.
+- [x] Publicación, pausa, reanudación y archivo con validación, declaraciones y auditoría transaccional.
+- [x] Fotografías JPEG/PNG/WebP verificadas y normalizadas; descargas públicas condicionadas y privadas autorizadas. No incluye documentos privados ni RAG.
+- [x] Catálogo público paginado y filtros conectados a API; decimales exactos y unidad obligatoria al filtrar cantidad.
+- [x] Perfil empresarial público con proyección explícita sin contactos ni dirección privada.
+- [x] Pantallas nuevas compiladas e integradas; inicio conservado y acciones conectadas al catálogo real.
+- [x] Recorrido funcional de materiales, persistencia, pausa/reanudación, aislamiento y necesidad privada: validación manual reportada por el responsable el 2026-11-26 tras su lista de pruebas.
+- [x] Teclado y responsive 360/768/1440 px de ese recorrido: validación manual reportada, no automatizada ni observada por el agente.
+- [ ] Ajustes visuales de materiales y comparación de capturas equivalentes; host de navegador del agente no disponible.
+- [ ] Ejecutar manualmente el bootstrap interactivo de plataforma con credenciales elegidas por el responsable. No se creó cuenta global en desarrollo automáticamente.
+- [ ] Respaldar y restaurar conjuntamente MySQL y fotografías; política de limpieza de archivos retirados.
+- [x] Moderación local de casos asignados, pausa de oferta y resolución de entrega disputada con auditoría, probada por API.
+- [ ] Revisión manual de moderación.
+
+### Evidencia de materiales — 2026-11-26
+
+- ADR 0009 registra el alcance autorizado, la visibilidad, los estados y el
+  almacenamiento local; conserva ADR previos. Sin proveedores externos ni despliegue.
+- Migración aditiva `20261126000100-materiales-catalogo.js` aplicada en desarrollo
+  y pruebas: diez tablas (`categorias`, `unidades`, `propiedades`,
+  `categoria_propiedad`, `ofertas`, `oferta_propiedad`, `archivos`,
+  `oferta_archivo`, `necesidades`, `necesidad_propiedad`), FK, unicidad,
+  índices y CHECK de cantidades, precios, estados y tipos de valor.
+  No se ejecutaron DROP, TRUNCATE, undo, reinicios ni modificaciones de MySQL80.
+- Seeder `20261126000100-catalogos-materiales.js`: ocho categorías, diez unidades,
+  tres dimensiones opcionales. Sin ofertas ficticias ni cuentas de acceso demo;
+  su ejecución queda registrada para no duplicarse.
+- Roles/permisos reutilizados; registro/invitaciones empresariales no conceden
+  rol global. Bootstrap local interactivo aislado del alta pública, con contraseña
+  oculta y rechazo de correos existentes; sintaxis comprobada, ejecución manual pendiente.
+- APIs y pantallas de catálogos, ofertas, necesidades, fotos, catálogo y perfil
+  público. Controladores, esquemas, modelos y servicios propios. Filtros de
+  texto parametrizados, paginación de doce, sin suma ni conversión de unidades.
+- Fotos: 5 MiB, 16 megapíxeles, seis activas por oferta; firma/tipo/decodificación,
+  WebP hasta 1600 px sin EXIF; clave aleatoria, hash y tamaño persistidos.
+  CSRF/origen también en multipart. No hay directorio estático de descargas.
+  Datos de pruebas en `.local/test-uploads`, desarrollo en `.local/uploads`.
+- Solicitar material informa pendiente: no crea solicitudes ni reservas. La
+  presentación editorial del inicio conserva sus imágenes identificadas como ejemplos.
+- `npm run test:mysql` incluye identidad y equipo para detectar regresiones.
+  **50 pruebas correctas, cero fallos, cero omitidas**. Incluye paginación,
+  definiciones inmutables y transiciones concurrentes. Resultado y comandos: ver README, sección
+  «Materiales y catálogo local». Solo usa `nuevo_origen_test`; fixtures ficticios
+  nuevos y sin purgar datos previos.
+- `frontend: npm test` correcto (dos pruebas, ampliadas con retornos a catálogo,
+  detalle y publicación y rechazo de rutas ambiguas). Compilación Vite correcta.
+- OpenAPI 0.4.0 (`openapi.yaml` + `materiales.yaml`) validado con swagger-cli.
+  Multer 2.5.0 y Sharp 0.35.5 instalados; auditoría de instalación sin avisos.
+- Incidencias encontradas y corregidas antes de entregar: descarga privada faltante,
+  protección de rutas bajo `.local`, patrones decimales del formulario y una
+  descripción YAML que se interpretaba como campos extra.
+- Navegador: intento CUA devuelve «The browser access host is unavailable».
+  No se acreditan capturas, responsive ni recorrido visual de materiales.
+  La validación manual anterior del usuario no se extiende a esta etapa.
 
 ## 4. Solicitudes y acuerdos
 
-- [ ] Solicitudes y transiciones válidas.
-- [ ] Conversación y seguimiento.
-- [ ] Acuerdos y reservas consistentes.
-- [ ] Entregas y confirmaciones.
-- [ ] Discrepancias y cancelaciones.
-- [ ] Cantidades pendientes y concurrencia.
-- [ ] Auditoría.
-- [ ] Flujo completo entre dos empresas.
+- [x] Solicitudes y transiciones válidas por API; rechazo de empresa propia y campos prohibidos.
+- [x] Propuestas versionadas y aceptación por contraparte; conversación privada y seguimiento SQL.
+- [x] Acuerdos con reservas atómicas, venta/donación/intercambio; snapshots históricos.
+- [x] Entregas parciales e idempotentes, recepción y aprovechamiento bilaterales por API.
+- [x] Discrepancias, asignación concurrente y resolución humana sin sustituir a las empresas.
+- [x] Cancelación libera solo reserva restante y conserva entregas históricas.
+- [x] Cantidades pendientes exactas, reserva concurrente y fallo bilateral sin reserva huérfana.
+- [x] Auditoría transaccional y rollback ante fallo de registro.
+- [x] Flujo completo entre empresas ficticias verificado por API/MySQL exclusivo.
+- [x] Indicadores SQL, tendencia diaria, unidades/direcciones y masas separadas; exportación CSV autorizada.
+- [ ] Recorrido manual de solicitudes, conversación, acuerdos, entregas, indicadores y casos.
+- [ ] Teclado y responsive 360/768/1440 px de estas pantallas nuevas.
+- [ ] Paginación del historial de solicitud más allá de 200 eventos.
 
 ## 5. IA
+
+Conexiones diferidas expresamente por el responsable. Sin proveedor/modelo elegido
+ni servicios simulados presentados como reales. El taller CRM no impone un
+proveedor: seguimiento local implementado; eventual CRM externo aún sin identificar.
 
 - [ ] Integración de proveedor desde backend.
 - [ ] Contratos de entrada y salida.
@@ -241,13 +307,17 @@ Pendientes específicos:
 - [ ] Retiro de documentos e invalidación del índice.
 - [ ] Google Drive autorizado.
 - [ ] Tres workflows n8n definidos por el anteproyecto.
-- [ ] Correo y notificaciones.
-- [ ] Evitar notificaciones duplicadas.
-- [ ] Exportación de datos propios.
-- [ ] Rectificación y baja verificadas.
-- [ ] Conservación y limpieza programada.
+- [x] Avisos de interfaz propios y deduplicados; no se envía correo.
+- [ ] Correo real, recordatorios y coincidencias automáticas.
+- [x] Exportación acotada de perfil, aceptaciones, consentimientos e historial de derechos propios, con reautenticación.
+- [x] Consentimientos opcionales revocables con historial y solicitudes verificadas por contraseña; revisión pendiente visible.
+- [ ] Exportación exhaustiva de conversaciones/documentos y resolución integral de derechos.
+- [ ] Ejecución de baja/anonimización personal y empresarial, conservación compartida y notificación final.
+- [x] Revisión/purga local controlada de tokens terminales a 30 días, con auditoría.
+- [ ] Limpieza programada productiva y políticas de conservación definitivas.
 - [ ] Restauración con reaplicación de supresiones.
-- [ ] Reportes y exportaciones reales.
+- [x] Indicadores y CSV empresariales desde uso confirmado en SQL.
+- [ ] Vistas globales de impacto, resúmenes IA y reportes automáticos.
 
 ## 7. Entrega
 
@@ -257,7 +327,8 @@ Pendientes específicos:
 - [ ] Documentación de API.
 - [ ] README con comandos comprobados.
 - [ ] Políticas coherentes con el comportamiento real.
-- [ ] Infraestructura y despliegue autorizados.
+- [x] Destinos autorizados y compatibilidad PostgreSQL con consigna verificada (ADR 0010).
+- [ ] Ensayo y migración PostgreSQL, cuentas/proyectos, configuración segura y publicación verificadas.
 - [ ] Demostración reproducible.
 
 ## Evidencia por tarea terminada
@@ -376,3 +447,141 @@ como antecedente. No completa tareas de identidad, negocio ni gobernanza futura.
   y secretos locales quedan en .local/ y backend/.env, ignorados por Git.
 - Cierre: Vite, API e instancia MySQL aislada detenidos; sin listeners en
   5173, 3001 o 3307. Datos conservados; MySQL80 original sigue activo.
+
+## Validación manual de materiales reportada — 2026-11-26
+
+El responsable confirmó que probó el recorrido pendiente y que funciona:
+búsqueda/detalle público, recarga, pausa/reanudación, aislamiento entre empresas,
+necesidad privada y revisión final de errores/teclado/tamaños de su lista.
+Es validación manual reportada por él; no observación del agente, automatización,
+comparación de capturas ni aceptación visual final. No se extiende a operación,
+moderación, recuperación, derechos o plataforma incorporados posteriormente.
+
+## Evidencia de operación y gobernanza local — 2026-11-26
+
+- Rama de trabajo: `feature/operacion-empresarial`. Se conservaron cambios y
+  datos anteriores; sin push, publicación ni conexión de proveedores en esta tarea.
+- Fuentes: anteproyecto vigente, ADR aceptados e instrucciones; consignas
+  originales de Proyecto Final, Plan de Producción y taller CRM consultadas en
+  Downloads. PostgreSQL permitido expresamente, página física 6 del Proyecto
+  Final. ADR 0010 registra el destino autorizado sin reescribir ADR anteriores.
+- Migraciones aditivas `20261126000200-operacion-empresarial.js` y
+  `20261126000300-solicitudes-derechos.js` aplicadas y registradas en desarrollo
+  y pruebas. Metadatos consultados en ambas bases: seis migraciones, **36 tablas
+  de dominio y dos internas de Sequelize**. Sin undo, DROP, TRUNCATE ni reinicio;
+  MySQL80 no utilizado ni modificado.
+- Modelos, validación estricta, servicios, controladores y rutas de solicitudes,
+  mensajes, acuerdos, líneas, entregas, confirmaciones, evidencias privadas,
+  incidencias, avisos y derechos. Decimales exactos y permisos vigentes bajo
+  bloqueos de empresa ordenados; unidad inmutable al tener reserva/entrega.
+- `backend: npm run test:mysql`: **68/68 aprobadas, cero fallos y cero omitidas**.
+  Incluye identidad, equipo y materiales previos. Exclusivamente
+  `nuevo_origen_test`, instancia aislada 3307, fixtures ficticios y sin reiniciar
+  datos. Pruebas nuevas en `backend/tests/operations.test.js`.
+- Verificado por API: solicitudes sin reserva, versión/proponente, privacidad de
+  conversación, cantidades insuficientes, aceptación repetida/concurrente,
+  intercambio bilateral y rollback de segunda reserva, cancelación parcial,
+  idempotencia de entrega y huella incompatible, confirmaciones de ambas partes,
+  uso posterior a recepción, masas medidas/estimadas y fuente, indicadores
+  propios, CSV autorizado, evidencia ajena/sin sesión denegada y auditoría.
+- Moderación: asignación concurrente con un ganador, caso ajeno denegado,
+  acciones prohibidas rechazadas, pausa pública y anulación sin mover existencias.
+  Reapertura conserva decisiones previas en auditoría y exige reconfirmar;
+  reconfirmación no colisiona con avisos anteriores. Sin decisión en nombre de
+  una empresa ni cambio de las condiciones del acuerdo.
+- Derechos: consentimiento con historial, exportación acotada con contraseña,
+  solicitud propia y revisión sin fingir eliminación, cola global denegada a
+  empresa; recuperación pública genérica y entrega manual autorizada sin correo,
+  enlaces revocados/usados/vencidos y revocación de sesiones al restablecer.
+  Reactivación propia autorizada y ajena denegada.
+- Plataforma: cuentas globales sin conversión empresarial, funciones limitadas,
+  versiones de borradores inmutables y auditoría. La carrera de última
+  administración usa dos fixtures persistidos en un universo de consulta
+  acotado a ellos, conservando las cuentas previas de pruebas; transacciones y
+  bloqueo real de la fila de rol. Un cambio procede y otro se rechaza 409;
+  permanece una administración activa. No es prueba de carga general.
+- Limpieza: modo sin cambios y aplicación sobre metadatos ficticios de pruebas
+  vencidos hace más de 30 días, con auditoría transaccional. En desarrollo se
+  ejecutó únicamente revisión: **cero candidatos y cero eliminaciones**.
+  La purga de prueba no afecta empresas, acuerdos ni auditoría.
+- Tras añadir aserciones de tendencia diaria se repitió la suite focalizada:
+  **18/18 aprobadas**. Campos de tendencia contrastados con cantidad y masa del
+  aprovechamiento persistido; no se añadieron conversiones ambientales.
+  La última repetición focalizada también pasó 18/18 tras verificar permiso
+  antes de consultar cuentas de recuperación y permitir reportes públicos de
+  cualquier usuario autenticado, sin dar acceso global a acuerdos empresariales.
+- `frontend: npm test`: **2/2** de retorno seguro; rutas nuevas incluidas.
+  `npm run build`: correcto, 86 módulos. OpenAPI **0.5.0** validado con
+  swagger-cli 4.0.4; esquemas decimales contrastados con punto válido/coma inválida.
+- `npm audit --omit=dev` en ambas aplicaciones: **cero vulnerabilidades reportadas**.
+  No se instalaron dependencias nuevas de aplicación para operación/gobernanza;
+  formato y validador se ejecutaron como herramientas temporales.
+- Pantallas integradas: solicitudes/nueva/detalle, acuerdo/entregas, indicadores,
+  avisos, casos, derechos, recuperación y plataforma. Inicio y recursos de marca
+  conservados; no se copió código del prototipo ni se añadieron controles demo.
+- Contrato y guías: `docs/api/operaciones.json`, OpenAPI raíz, README,
+  `docs/api/pruebas-manuales-operacion.md`, DER y trazabilidad local.
+- Limitación: host CUA de navegador no disponible en el intento de esta tarea.
+  No se obtuvieron capturas ni se verificaron teclado/responsive o recorridos
+  visuales de las nuevas pantallas. No extender validaciones manuales anteriores.
+
+Pendientes que no se cierran con esta evidencia:
+
+- [ ] Revisión manual nueva, teclado, responsive y ajustes visuales.
+- [ ] Ejecución integral de RF-22, exportación exhaustiva y tratamiento de respaldos:
+  requiere responsable, excepciones y conservación compartida validados.
+- [ ] Proveedor/correo productivo, IA/modelo, documentos/RAG/Drive y tres workflows n8n.
+- [ ] Eventual CRM externo identificado y autorizado; el taller no fija proveedor.
+- [ ] Ensayo de PostgreSQL, respaldo/restauración, comparación de datos y regresión.
+- [ ] Configuración productiva, proyectos/accesos, regiones, almacenamiento privado,
+  comparación/costos y despliegue Render/Vercel/Supabase. No se publicó el sistema.
+## Evidencia de mensajería y experiencia — 2026-11-27
+
+ADR 0014 y revisión en `docs/gobernanza/revision-experiencia-2026-11-27.md`.
+
+- [x] Bandeja y chat propios ligados a solicitud/acuerdo, con mensajes previos conservados.
+- [x] Cursores, orden cronológico, actualización periódica y envío idempotente por autor.
+- [x] Permisos vigentes, pertenencia, auditoría y avisos transaccionales preservados.
+- [x] Menú privado común, botones, foco y estados legibles implementados.
+- [x] Reintento de avisos, consultas propias solo para intercambio y confirmaciones por etapa.
+- [x] Fallo de conexión SQL 503 comprensible sin detalles internos.
+- [x] Contrato OpenAPI 0.6.0 validado y guía manual actualizada.
+- [x] Recorrido de los 12 pasos de revisión: validación manual reportada por el responsable el 2026-11-27 («sí, todo funciona bien»); incluye chat entre empresas, actualización, persistencia, borrador, enlaces, botones, confirmaciones y avisos.
+- [x] Teclado y responsive 360/768/1440 px de ese recorrido: validación manual reportada por el responsable; no automatizada ni observada por el agente.
+- [x] Navegación privada del recorrido informado: perfil, ofertas, necesidades, solicitudes, mensajes y avisos; validación manual reportada.
+- [ ] Lector de pantalla, historial largo, desconexión/reintento de envío y comprobaciones manuales específicas de otros roles/pantallas no incluidas en los 12 pasos.
+- [ ] Confirmación específica de la prueba opcional con una tercera empresa; no se presume disponibilidad de esa cuenta a partir del reporte general. El aislamiento sí tiene evidencia automatizada previa.
+- [ ] Ajustes visuales y comparación; pendientes previos de portada/marca conservados.
+
+Pruebas ejecutadas: `backend: npm run test:mysql`, **70/70 aprobadas**, cero
+fallos/omisiones, exclusivamente `nuevo_origen_test`; focalizada de operación,
+**19/19**. Incluye aislamiento, autor/campos prohibidos, CSRF, claves repetidas y
+conflictivas, doble envío concurrente 200/201 con un mensaje, cursores sobre
+53 registros, retirada de función en sesión abierta y rollback por auditoría.
+`unavailable.test.js` comprueba 503 sin datos internos; no se detuvo MySQL para ello.
+
+Frontend: **4/4** pruebas de fusión con IDs grandes, deduplicación y retorno seguro;
+compilación correcta, **93 módulos**. OpenAPI validado con swagger-cli 4.0.4.
+Contraste calculado de cuatro pares principales: 9,17:1; 8,40:1; 7,55:1; 8,85:1.
+No acredita contraste exhaustivo ni conformidad WCAG.
+
+Migración `20261127000100-mensajeria-idempotente.js` aplicada en desarrollo y
+pruebas: columna nullable clave_cliente, índice único autor/clave e índice
+solicitud/id. Sin traslado/borrado de mensajes, reset ni modificación de MySQL80.
+Backend anterior verificado y reiniciado solo ese proceso en 3001, con
+`npm run dev`; ruta nueva 401 sin sesión, proxy/disponibilidad MySQL 200.
+
+Navegador CUA bloqueado al iniciar helper por acceso denegado: sin capturas ni
+recorrido visual nuevo. La revisión manual anterior no se extiende a esta versión.
+Sin dependencias nuevas de aplicación, código del prototipo, push ni despliegue.
+Límites: consulta cada 15 segundos con pestaña visible, sin presencia/lectura
+simuladas ni adjuntos; borrador en memoria, sin garantía tras recargar/cerrar.
+
+### Validación manual reportada — 2026-11-27
+
+Tras recibir la lista de 12 pasos, el responsable respondió «sí, todo funciona
+bien». Se registra como su confirmación del recorrido descrito, incluido teclado
+y los tres anchos indicados. No es una ejecución automatizada, observación
+independiente del agente ni comparación de capturas. Los casos opcionales o no
+incluidos explícitamente no se dan por probados. Ajustes visuales pendientes
+conservados. En este registro solo se modificó TASKS.md, sin tocar código.

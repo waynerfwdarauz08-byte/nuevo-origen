@@ -1,0 +1,81 @@
+openapi: 3.0.3
+info:
+  title: Nuevo Origen — mensajería local
+  version: 0.1.0
+  description: >-
+    RF-11 y ADR 0014. Conversación por solicitud, conservada al formalizar acuerdo.
+    Sesión empresarial con acuerdos.gestionar y pertenencia verificadas en cada petición.
+    Sin presencia ni lectura simuladas. Actualización de interfaz cada 15 segundos.
+servers:
+  - url: http://127.0.0.1:3001
+security: [{SessionCookie: []}]
+paths:
+  /api/mensajeria/conversaciones:
+    get:
+      summary: Bandeja propia, ordenada por actividad, 20 conversaciones por página
+      security: [{SessionCookie: []}]
+      parameters:
+        - {name: pagina, in: query, schema: {type: integer, minimum: 1, maximum: 10000, default: 1}}
+      responses:
+        '200': {description: 'conversaciones, pagina, total y paginas. Cada fila contiene id de solicitud, título, contraparte pública mínima, estado, acuerdo opcional y último mensaje resumido; no correos ni contactos privados.'}
+        '400': {description: Filtro inválido.}
+        '401': {description: Sesión ausente o revocada.}
+        '403': {description: Función sin permiso empresarial.}
+        '503': {description: Base de datos temporalmente no disponible; sin detalles internos.}
+  /api/mensajeria/conversaciones/{id}:
+    parameters:
+      - {$ref: '#/components/parameters/Id'}
+    get:
+      summary: Contexto de una solicitud propia y su acuerdo, con contraparte autorizada
+      security: [{SessionCookie: []}]
+      responses:
+        '200': {description: 'Solicitud con propuesta, versión, estado, empresas y acuerdo opcional. contraparte contiene id/nombre. No acepta ni modifica condiciones.'}
+        '401': {description: Sin sesión.}
+        '403': {description: Sin acuerdos.gestionar.}
+        '404': {description: Conversación inexistente o ajena.}
+  /api/mensajeria/conversaciones/{id}/mensajes:
+    parameters:
+      - {$ref: '#/components/parameters/Id'}
+    get:
+      summary: Historial por cursor, máximo 50 mensajes, siempre en orden cronológico
+      security: [{SessionCookie: []}]
+      parameters:
+        - {name: antes_de, in: query, schema: {type: string, pattern: '^[1-9][0-9]{0,19}$'}, description: 'ID exclusivo para cargar anteriores. No combinar con despues_de.'}
+        - {name: despues_de, in: query, schema: {type: string, pattern: '^[1-9][0-9]{0,19}$'}, description: 'ID exclusivo para recibir posteriores. Si hay_mas=true, continuar desde el último ID recibido.'}
+      responses:
+        '200': {description: 'mensajes [{id, autor_id, nombre, empresa_id, contenido, enviado_en}], hay_mas y direccion (nuevos/anteriores). Sin cursores devuelve los últimos 50; hay_mas indica anteriores.'}
+        '400': {description: Cursores incompatibles o filtros no permitidos.}
+        '401': {description: Sin sesión.}
+        '403': {description: Sin permiso vigente.}
+        '404': {description: Conversación inexistente o ajena.}
+    post:
+      summary: Enviar texto con idempotencia por autor, conservando auditoría y avisos transaccionales
+      security: [{SessionCookie: []}]
+      parameters:
+        - {name: X-CSRF-Token, in: header, required: true, schema: {type: string}, description: 'Obtener de /api/auth/csrf con cookies; Origin autorizado obligatorio.'}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [contenido, clave_cliente]
+              properties:
+                contenido: {type: string, minLength: 1, maxLength: 4000, description: Texto sin quedar vacío al recortar espacios.}
+                clave_cliente: {type: string, format: uuid, description: 'Mantener la misma clave al reintentar idéntico contenido y conversación.'}
+      responses:
+        '201': {description: 'Mensaje persistido, con id, autor_id, nombre, empresa_id, contenido y enviado_en.'}
+        '200': {description: 'Reintento idéntico; mismo mensaje y repetido=true, sin nueva auditoría ni aviso.'}
+        '400': {description: Campos inválidos o prohibidos.}
+        '401': {description: Sin sesión.}
+        '403': {description: CSRF u origen inválido o función retirada.}
+        '404': {description: Solicitud inexistente o ajena.}
+        '409': {description: La clave del autor ya se utilizó con otro contenido o solicitud.}
+        '429': {description: Límite local de 60 intentos por 15 minutos.}
+        '503': {description: Base temporalmente no disponible; conservar texto y clave al reintentar.}
+components:
+  securitySchemes:
+    SessionCookie: {type: apiKey, in: cookie, name: no_session}
+  parameters:
+    Id: {name: id, in: path, required: true, schema: {type: string, pattern: '^[1-9][0-9]{0,19}$'}, description: ID de la solicitud que identifica la conversación.}

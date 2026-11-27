@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useSession } from "../components/SessionProvider";
 import { api } from "../services/identity";
 import { Link } from "react-router-dom";
+import { roleLabel } from "../services/presentation";
 export default function EspacioPrivado() {
   const { session, refresh } = useSession();
   const [account, setAccount] = useState(null);
@@ -64,7 +65,28 @@ export default function EspacioPrivado() {
   }
   return (
     <section className="section identity-page identity-page--wide">
-      <h1>Tu espacio empresarial</h1>
+      <h1>
+        {session.empresa ? "Tu espacio empresarial" : "Tu cuenta de plataforma"}
+      </h1>
+      {session.permisos.includes("materiales.leer") && (
+        <nav className="material-actions" aria-label="Materiales de mi empresa">
+          <Link className="button" to="/mi-espacio/ofertas">
+            Mis ofertas
+          </Link>
+          <Link className="button secondary" to="/mi-espacio/necesidades">
+            Mis necesidades
+          </Link>
+          <Link to="/catalogo">Catálogo público</Link>
+        </nav>
+      )}
+      {session.roles.includes("administrador_plataforma") &&
+        session.permisos.includes("categorias.gestionar") && (
+          <p>
+            <Link className="button" to="/mi-espacio/catalogos">
+              Administrar categorías, unidades y propiedades
+            </Link>
+          </p>
+        )}
       {session.roles.includes("administrador_empresa") &&
         session.permisos.includes("equipo.gestionar") && (
           <p>
@@ -78,7 +100,7 @@ export default function EspacioPrivado() {
         <strong>{session.empresa?.nombre}</strong>
       </p>
       <p className="presentation-note">
-        Funciones: {session.roles.join(", ")}. La sesión vence el{" "}
+        Funciones: {session.roles.map(roleLabel).join(", ")}. La sesión vence el{" "}
         {new Date(session.vence_en).toLocaleString("es-CR", {
           timeZone: "America/Costa_Rica",
         })}{" "}
@@ -95,7 +117,7 @@ export default function EspacioPrivado() {
         </div>
       )}
       {success && <p role="status">{success}</p>}
-      {!account || !company ? (
+      {!account || (session.empresa && !company) ? (
         <p role="status">Cargando perfil…</p>
       ) : (
         <div className="profile-columns">
@@ -135,60 +157,62 @@ export default function EspacioPrivado() {
               </p>
             ))}
           </form>
-          <form
-            className="identity-form"
-            onSubmit={(event) => save(event, true)}
-          >
-            <h2>Tu empresa</h2>
-            {!canEdit && (
-              <p>
-                Tu función permite consultar el perfil empresarial, sin
-                modificarlo.
-              </p>
-            )}
-            <fieldset disabled={!canEdit || busy}>
-              <legend>Datos empresariales</legend>
-              {[
-                ["nombre", "Nombre", 150],
-                ["sector", "Sector", 80],
-                ["correo_contacto", "Correo de contacto", 254],
-                ["telefono", "Teléfono", 30],
-                ["ubicacion_publica", "Ubicación pública aproximada", 160],
-              ].map(([name, label, max]) => (
-                <label key={name}>
-                  {label}
-                  <input
-                    name={name}
-                    defaultValue={company[name]}
-                    maxLength={max}
-                    type={name === "correo_contacto" ? "email" : "text"}
-                    required={name !== "telefono"}
+          {company && (
+            <form
+              className="identity-form"
+              onSubmit={(event) => save(event, true)}
+            >
+              <h2>Tu empresa</h2>
+              {!canEdit && (
+                <p>
+                  Tu función permite consultar el perfil empresarial, sin
+                  modificarlo.
+                </p>
+              )}
+              <fieldset disabled={!canEdit || busy}>
+                <legend>Datos empresariales</legend>
+                {[
+                  ["nombre", "Nombre", 150],
+                  ["sector", "Sector", 80],
+                  ["correo_contacto", "Correo de contacto", 254],
+                  ["telefono", "Teléfono", 30],
+                  ["ubicacion_publica", "Ubicación pública aproximada", 160],
+                ].map(([name, label, max]) => (
+                  <label key={name}>
+                    {label}
+                    <input
+                      name={name}
+                      defaultValue={company[name]}
+                      maxLength={max}
+                      type={name === "correo_contacto" ? "email" : "text"}
+                      required={name !== "telefono"}
+                    />
+                  </label>
+                ))}
+                <label>
+                  Descripción
+                  <textarea
+                    name="descripcion"
+                    defaultValue={company.descripcion}
+                    maxLength={4000}
                   />
                 </label>
-              ))}
-              <label>
-                Descripción
-                <textarea
-                  name="descripcion"
-                  defaultValue={company.descripcion}
-                  maxLength={4000}
-                />
-              </label>
-              <label>
-                Dirección privada
-                <textarea
-                  name="direccion_privada"
-                  defaultValue={company.direccion_privada}
-                  maxLength={4000}
-                />
-              </label>
-            </fieldset>
-            {canEdit && (
-              <button className="button" disabled={busy}>
-                Guardar empresa
-              </button>
-            )}
-          </form>
+                <label>
+                  Dirección privada
+                  <textarea
+                    name="direccion_privada"
+                    defaultValue={company.direccion_privada}
+                    maxLength={4000}
+                  />
+                </label>
+              </fieldset>
+              {canEdit && (
+                <button className="button" disabled={busy}>
+                  Guardar empresa
+                </button>
+              )}
+            </form>
+          )}
         </div>
       )}
     </section>

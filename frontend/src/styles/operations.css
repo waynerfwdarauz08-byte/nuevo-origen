@@ -1,0 +1,25 @@
+.operation-copy {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.materials-page .team-card {
+  margin: 16px 0;
+}
+.materials-page .team-card h3 {
+  margin-top: 16px;
+}
+.materials-page section > h2 {
+  margin-top: 32px;
+}
+.materials-page .team-card p {
+  margin: 8px 0;
+}
+.identity-page .team-card {
+  margin-top: 20px;
+}
+.materials-page .identity-form fieldset {
+  background: #fff;
+}
+.materials-page .draft-notice {
+  margin: 24px 0;
+}

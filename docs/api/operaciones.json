@@ -1,0 +1,2882 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Nuevo Origen — operación y gobernanza locales",
+    "version": "0.1.0",
+    "description": "ADR 0011 y 0012. Sesión y permisos vigentes, aislamiento empresarial, mutaciones CSRF. Sin correo, IA, RAG, n8n ni CRM externos. Cantidades decimales como cadenas."
+  },
+  "servers": [
+    {
+      "url": "http://127.0.0.1:3001"
+    }
+  ],
+  "paths": {
+    "/api/solicitudes": {
+      "get": {
+        "summary": "Solicitudes propias y recibidas; acuerdos.gestionar",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "solicitudes, pagina, total y paginas; 20 por página."
+          },
+          "400": {
+            "description": "Entrada inválida o campo no permitido."
+          },
+          "403": {
+            "description": "Permiso, CSRF u origen rechazado."
+          },
+          "409": {
+            "description": "Estado, versión o cantidades incompatibles."
+          },
+          "429": {
+            "description": "Demasiados intentos."
+          },
+          "401": {
+            "description": "Sesión ausente, vencida o revocada."
+          },
+          "404": {
+            "description": "Recurso inexistente o fuera del alcance autorizado."
+          }
+        },
+        "parameters": [
+          {
+            "name": "pagina",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 10000,
+              "default": 1
+            }
+          }
+        ]
+      },
+      "post": {
+        "summary": "Crear solicitud sin reservar existencias",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Resultado persistido o consulta autorizada."
+          },
+          "400": {
+            "description": "Entrada inválida o campo no permitido."
+          },
+          "403": {
+            "description": "Permiso, CSRF u origen rechazado."
+          },
+          "409": {
+            "description": "Estado, versión o cantidades incompatibles."
+          },
+          "429": {
+            "description": "Demasiados intentos."
+          },
+          "401": {
+            "description": "Sesión ausente, vencida o revocada."
+          },
+          "404": {
+            "description": "Recurso inexistente o fuera del alcance autorizado."
+          }
+        },
+        "parameters": [
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Obtener de /api/auth/csrf conservando cookies; Origin autorizado obligatorio."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Solicitud"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/solicitudes/{id}": {
+      "get": {
+        "summary": "Detalle participante con propuesta versionada e historial",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Propuesta, partes, estado, acuerdo y hasta 200 eventos históricos. No incluye mensajes ajenos."
+          },
+          "400": {
+            "description": "Entrada inválida o campo no permitido."
+          },
+          "403": {
+            "description": "Permiso, CSRF u origen rechazado."
+          },
+          "409": {
+            "description": "Estado, versión o cantidades incompatibles."
+          },
+          "429": {
+            "description": "Demasiados intentos."
+          },
+          "401": {
+            "description": "Sesión ausente, vencida o revocada."
+          },
+          "404": {
+            "description": "Recurso inexistente o fuera del alcance autorizado."
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]*$"
+            }
+          }
+        ]
+      }
+    },
+    "/api/solicitudes/{id}/condiciones": {
+      "put": {
+        "summary": "Revisar propuesta con versión vigente",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Resultado persistido o consulta autorizada."
+          },
+          "400": {
+            "description": "Entrada inválida o campo no permitido."
+          },
+          "403": {
+            "description": "Permiso, CSRF u origen rechazado."
+          },
+          "409": {
+            "description": "Estado, versión o cantidades incompatibles."
+          },
+          "429": {
+            "description": "Demasiados intentos."
+          },
+          "401": {
+            "description": "Sesión ausente, vencida o revocada."
+          },
+          "404": {
+            "description": "Recurso inexistente o fuera del alcance autorizado."
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]*$"
+            }
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Obtener de /api/auth/csrf conservando cookies; Origin autorizado obligatorio."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Propuesta"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/solicitudes/{id}/aceptar": {
+      "post": {
+        "summary": "Contraparte acepta versión y reserva todas las líneas",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Acuerdo con líneas y entregas; repetición devuelve 200 con el acuerdo existente."
+          },
+          "400": {
+            "description": "Entrada inválida o campo no permitido."
+          },
+          "403": {
+            "description": "Permiso, CSRF u origen rechazado."
+          },
+          "409": {
+            "description": "Estado, versión o cantidades incompatibles."
+          },
+          "429": {
+            "description": "Demasiados intentos."
+          },
+          "401": {
+            "description": "Sesión ausente, vencida o revocada."
+          },
+          "404": {
+            "description": "Recurso inexistente o fuera del alcance autorizado."
+          },
+          "200": {
+            "description": "Acuerdo previamente creado, sin reserva duplicada."
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]*$"
+            }
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Obtener de /api/auth/csrf conservando cookies; Origin autorizado obligatorio."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Aceptar"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/solicitudes/{id}/rechazar": {
+      "post": {
+        "summary": "Cerrar solicitud abierta con motivo",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Resultado persistido o consulta autorizada."
+          },
+          "400": {
+            "description": "Entrada inválida o campo no permitido."
+          },
+          "403": {
+            "description": "Permiso, CSRF u origen rechazado."
+          },
+          "409": {
+            "description": "Estado, versión o cantidades incompatibles."
+          },
+          "429": {
+            "description": "Demasiados intentos."
+          },
+          "401": {
+            "description": "Sesión ausente, vencida o revocada."
+          },
+          "404": {
+            "description": "Recurso inexistente o fuera del alcance autorizado."
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]*$"
+            }
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Obtener de /api/auth/csrf conservando cookies; Origin autorizado obligatorio."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Motivo"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/solicitudes/{id}/cancelar": {
+      "post": {
+        "summary": "Cerrar solicitud abierta con motivo",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Resultado persistido o consulta autorizada."
+          },
+          "400": {
+            "description": "Entrada inválida o campo no permitido."
+          },
+          "403": {
+            "description": "Permiso, CSRF u origen rechazado."
+          },
+          "409": {
+            "description": "Estado, versión o cantidades incompatibles."
+          },
+          "429": {
+            "description": "Demasiados intentos."
+          },
+          "401": {
+            "description": "Sesión ausente, vencida o revocada."
+          },
+          "404": {
+            "description": "Recurso inexistente o fuera del alcance autorizado."
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]*$"
+            }
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Obtener de /api/auth/csrf conservando cookies; Origin autorizado obligatorio."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Motivo"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/solicitudes/{id}/mensajes": {
+      "get": {
+        "summary": "Conversación privada de participantes",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "mensajes, pagina, total y paginas; 30 por página."
+          },
+          "400": {
+            "description": "Entrada inválida o campo no permitido."
+          },
+          "403": {
+            "description": "Permiso, CSRF u origen rechazado."
+          },
+          "409": {
+            "description": "Estado, versión o cantidades incompatibles."
+          },
+          "429": {
+            "description": "Demasiados intentos."
+          },
+          "401": {
+            "description": "Sesión ausente, vencida o revocada."
+          },
+          "404": {
+            "description": "Recurso inexistente o fuera del alcance autorizado."
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]*$"
+            }
+          },
+          {
+            "name": "pagina",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 10000,
+              "default": 1
+            }
+          }
+        ]
+      },
+      "post": {
+        "summary": "Enviar mensaje privado",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Resultado persistido o consulta autorizada."
+          },
+          "400": {
+            "description": "Entrada inválida o campo no permitido."
+          },
+          "403": {
+            "description": "Permiso, CSRF u origen rechazado."
+          },
+          "409": {
+            "description": "Estado, versión o cantidades incompatibles."
+          },
+          "429": {
+            "description": "Demasiados intentos."
+          },
+          "401": {
+            "description": "Sesión ausente, vencida o revocada."
+          },
+          "404": {
+            "description": "Recurso inexistente o fuera del alcance autorizado."
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]*$"
+            }
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Obtener de /api/auth/csrf conservando cookies; Origin autorizado obligatorio."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Mensaje"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/acuerdos/{id}": {
+      "get": {
+        "summary": "Consultar condiciones y líneas históricas, entregas y saldo pendiente",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Resultado persistido o consulta autorizada."
+          },
+          "400": {
+            "description": "Entrada inválida o campo no permitido."
+          },
+          "403": {
+            "description": "Permiso, CSRF u origen rechazado."
+          },
+          "409": {
+            "description": "Estado, versión o cantidades incompatibles."
+          },
+          "429": {
+            "description": "Demasiados intentos."
+          },
+          "401": {
+            "description": "Sesión ausente, vencida o revocada."
+          },
+          "404": {
+            "description": "Recurso inexistente o fuera del alcance autorizado."
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]*$"
+            }
+          }
+        ]
+      }
+    },
+    "/api/acuerdos/{id}/cancelar": {
+      "post": {
+        "summary": "Cancelar reserva restante sin borrar entregas",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Resultado persistido o consulta autorizada."
+          },
+          "400": {
+            "description": "Entrada inválida o campo no permitido."
+          },
+          "403": {
+            "description": "Permiso, CSRF u origen rechazado."
+          },
+          "409": {
+            "description": "Estado, versión o cantidades incompatibles."
+          },
+          "429": {
+            "description": "Demasiados intentos."
+          },
+          "401": {
+            "description": "Sesión ausente, vencida o revocada."
+          },
+          "404": {
+            "description": "Recurso inexistente o fuera del alcance autorizado."
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]*$"
+            }
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Obtener de /api/auth/csrf conservando cookies; Origin autorizado obligatorio."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Motivo"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/acuerdos/{id}/entregas": {
+      "post": {
+        "summary": "Registrar entrega parcial idempotente",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Entrega creada. Repetición equivalente devuelve 200; igual clave con entrada distinta devuelve 409."
+          },
+          "400": {
+            "description": "Entrada inválida o campo no permitido."
+          },
+          "403": {
+            "description": "Permiso, CSRF u origen rechazado."
+          },
+          "409": {
+            "description": "Estado, versión o cantidades incompatibles."
+          },
+          "429": {
+            "description": "Demasiados intentos."
+          },
+          "401": {
+            "description": "Sesión ausente, vencida o revocada."
+          },
+          "404": {
+            "description": "Recurso inexistente o fuera del alcance autorizado."
+          },
+          "200": {
+            "description": "Entrega previamente registrada con la misma clave y entrada."
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]*$"
+            }
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Obtener de /api/auth/csrf conservando cookies; Origin autorizado obligatorio."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Entrega"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/entregas/{id}/confirmaciones": {
+      "post": {
+        "summary": "Confirmar recepción o aprovechamiento de la propia empresa",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Resultado persistido o consulta autorizada."
+          },
+          "400": {
+            "description": "Entrada inválida o campo no permitido."
+          },
+          "403": {
+            "description": "Permiso, CSRF u origen rechazado."
+          },
+          "409": {
+            "description": "Estado, versión o cantidades incompatibles."
+          },
+          "429": {
+            "description": "Demasiados intentos."
+          },
+          "401": {
+            "description": "Sesión ausente, vencida o revocada."
+          },
+          "404": {
+            "description": "Recurso inexistente o fuera del alcance autorizado."
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]*$"
+            }
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Obtener de /api/auth/csrf conservando cookies; Origin autorizado obligatorio."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Confirmacion"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/entregas/{id}/evidencias": {
+      "post": {
+        "summary": "Adjuntar evidencia privada; participante con acuerdos.gestionar",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Resultado persistido o consulta autorizada."
+          },
+          "400": {
+            "description": "Entrada inválida o campo no permitido."
+          },
+          "403": {
+            "description": "Permiso, CSRF u origen rechazado."
+          },
+          "409": {
+            "description": "Estado, versión o cantidades incompatibles."
+          },
+          "429": {
+            "description": "Demasiados intentos."
+          },
+          "401": {
+            "description": "Sesión ausente, vencida o revocada."
+          },
+          "404": {
+            "description": "Recurso inexistente o fuera del alcance autorizado."
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]*$"
+            }
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Obtener de /api/auth/csrf conservando cookies; Origin autorizado obligatorio."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "foto": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "JPEG/PNG/WebP hasta 5 MiB y 16 MP; máximo seis evidencias por entrega."
+                  }
+                },
+                "required": [
+                  "foto"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/entregas/{id}/evidencias/{fileId}": {
+      "get": {
+        "summary": "Descargar evidencia privada autorizada",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Imagen WebP, nunca URL pública permanente."
+          },
+          "400": {
+            "description": "Entrada inválida o campo no permitido."
+          },
+          "403": {
+            "description": "Permiso, CSRF u origen rechazado."
+          },
+          "409": {
+            "description": "Estado, versión o cantidades incompatibles."
+          },
+          "429": {
+            "description": "Demasiados intentos."
+          },
+          "401": {
+            "description": "Sesión ausente, vencida o revocada."
+          },
+          "404": {
+            "description": "Recurso inexistente o fuera del alcance autorizado."
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]*$"
+            }
+          },
+          {
+            "name": "fileId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]*$"
+            }
+          }
+        ]
+      }
+    },
+    "/api/indicadores": {
+      "get": {
+        "summary": "Indicadores SQL de la empresa; indicadores.operativos o reportes.exportar",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "periodo, grupos por unidad y dirección, tendencia_diaria y masas medidas/estimadas separadas; solo uso bilateral confirmado."
+          },
+          "400": {
+            "description": "Entrada inválida o campo no permitido."
+          },
+          "403": {
+            "description": "Permiso, CSRF u origen rechazado."
+          },
+          "409": {
+            "description": "Estado, versión o cantidades incompatibles."
+          },
+          "429": {
+            "description": "Demasiados intentos."
+          },
+          "401": {
+            "description": "Sesión ausente, vencida o revocada."
+          },
+          "404": {
+            "description": "Recurso inexistente o fuera del alcance autorizado."
+          }
+        },
+        "parameters": [
+          {
+            "name": "desde",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "hasta",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ]
+      }
+    },
+    "/api/indicadores/exportacion": {
+      "get": {
+        "summary": "Exportar indicadores propios; reportes.exportar",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "CSV UTF-8 con encabezado de descarga; cantidades por unidad y dirección."
+          },
+          "400": {
+            "description": "Entrada inválida o campo no permitido."
+          },
+          "403": {
+            "description": "Permiso, CSRF u origen rechazado."
+          },
+          "409": {
+            "description": "Estado, versión o cantidades incompatibles."
+          },
+          "429": {
+            "description": "Demasiados intentos."
+          },
+          "401": {
+            "description": "Sesión ausente, vencida o revocada."
+          },
+          "404": {
+            "description": "Recurso inexistente o fuera del alcance autorizado."
+          }
+        },
+        "parameters": [
+          {
+            "name": "desde",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "hasta",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ]
+      }
+    },
+    "/api/seguimiento/embudo": {
+      "get": {
+        "summary": "Seguimiento por etapas propio; sin CRM externo",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Conteos actuales y conversión solicitudes con acuerdo / solicitudes. Pendientes no se consideran pérdidas."
+          },
+          "400": {
+            "description": "Entrada inválida o campo no permitido."
+          },
+          "403": {
+            "description": "Permiso, CSRF u origen rechazado."
+          },
+          "409": {
+            "description": "Estado, versión o cantidades incompatibles."
+          },
+          "429": {
+            "description": "Demasiados intentos."
+          },
+          "401": {
+            "description": "Sesión ausente, vencida o revocada."
+          },
+          "404": {
+            "description": "Recurso inexistente o fuera del alcance autorizado."
+          }
+        }
+      }
+    },
+    "/api/seguimiento/atencion": {
+      "get": {
+        "summary": "Solicitudes sin actualización durante N días; acuerdos.gestionar",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Resultado persistido o consulta autorizada."
+          },
+          "400": {
+            "description": "Entrada inválida o campo no permitido."
+          },
+          "403": {
+            "description": "Permiso, CSRF u origen rechazado."
+          },
+          "409": {
+            "description": "Estado, versión o cantidades incompatibles."
+          },
+          "429": {
+            "description": "Demasiados intentos."
+          },
+          "401": {
+            "description": "Sesión ausente, vencida o revocada."
+          },
+          "404": {
+            "description": "Recurso inexistente o fuera del alcance autorizado."
+          }
+        },
+        "parameters": [
+          {
+            "name": "dias",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 365,
+              "default": 3
+            }
+          }
+        ]
+      }
+    },
+    "/api/notificaciones": {
+      "get": {
+        "summary": "Avisos de interfaz del usuario",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "avisos, pagina, total, paginas y correo_enviado=false; 30 por página."
+          },
+          "400": {
+            "description": "Entrada inválida o campo no permitido."
+          },
+          "403": {
+            "description": "Permiso, CSRF u origen rechazado."
+          },
+          "409": {
+            "description": "Estado, versión o cantidades incompatibles."
+          },
+          "429": {
+            "description": "Demasiados intentos."
+          },
+          "401": {
+            "description": "Sesión ausente, vencida o revocada."
+          },
+          "404": {
+            "description": "Recurso inexistente o fuera del alcance autorizado."
+          }
+        },
+        "parameters": [
+          {
+            "name": "pagina",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 10000,
+              "default": 1
+            }
+          }
+        ]
+      }
+    },
+    "/api/notificaciones/{id}/leida": {
+      "post": {
+        "summary": "Marcar aviso propio leído",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Resultado persistido o consulta autorizada."
+          },
+          "400": {
+            "description": "Entrada inválida o campo no permitido."
+          },
+          "403": {
+            "description": "Permiso, CSRF u origen rechazado."
+          },
+          "409": {
+            "description": "Estado, versión o cantidades incompatibles."
+          },
+          "429": {
+            "description": "Demasiados intentos."
+          },
+          "401": {
+            "description": "Sesión ausente, vencida o revocada."
+          },
+          "404": {
+            "description": "Recurso inexistente o fuera del alcance autorizado."
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]*$"
+            }
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Obtener de /api/auth/csrf conservando cookies; Origin autorizado obligatorio."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Vacio"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/incidencias": {
+      "post": {
+        "summary": "Reportar una oferta pública o un acuerdo propio",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Resultado persistido o consulta autorizada."
+          },
+          "400": {
+            "description": "Entrada inválida o campo no permitido."
+          },
+          "403": {
+            "description": "Permiso, CSRF u origen rechazado."
+          },
+          "409": {
+            "description": "Estado, versión o cantidades incompatibles."
+          },
+          "429": {
+            "description": "Demasiados intentos."
+          },
+          "401": {
+            "description": "Sesión ausente, vencida o revocada."
+          },
+          "404": {
+            "description": "Recurso inexistente o fuera del alcance autorizado."
+          }
+        },
+        "parameters": [
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Obtener de /api/auth/csrf conservando cookies; Origin autorizado obligatorio."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Reporte"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/administracion/incidencias": {
+      "get": {
+        "summary": "Referencias de casos; revisión humana autorizada",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "No incluye motivo ni evidencia en el listado; máximo 30 por página."
+          },
+          "400": {
+            "description": "Entrada inválida o campo no permitido."
+          },
+          "403": {
+            "description": "Permiso, CSRF u origen rechazado."
+          },
+          "409": {
+            "description": "Estado, versión o cantidades incompatibles."
+          },
+          "429": {
+            "description": "Demasiados intentos."
+          },
+          "401": {
+            "description": "Sesión ausente, vencida o revocada."
+          },
+          "404": {
+            "description": "Recurso inexistente o fuera del alcance autorizado."
+          }
+        },
+        "parameters": [
+          {
+            "name": "pagina",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 10000,
+              "default": 1
+            }
+          }
+        ]
+      }
+    },
+    "/api/administracion/incidencias/{id}": {
+      "get": {
+        "summary": "Detalle del caso asignado a quien consulta; acceso auditado",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Resultado persistido o consulta autorizada."
+          },
+          "400": {
+            "description": "Entrada inválida o campo no permitido."
+          },
+          "403": {
+            "description": "Permiso, CSRF u origen rechazado."
+          },
+          "409": {
+            "description": "Estado, versión o cantidades incompatibles."
+          },
+          "429": {
+            "description": "Demasiados intentos."
+          },
+          "401": {
+            "description": "Sesión ausente, vencida o revocada."
+          },
+          "404": {
+            "description": "Recurso inexistente o fuera del alcance autorizado."
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]*$"
+            }
+          }
+        ]
+      }
+    },
+    "/api/administracion/incidencias/{id}/asignarme": {
+      "post": {
+        "summary": "Asignación concurrente de un caso abierto",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Resultado persistido o consulta autorizada."
+          },
+          "400": {
+            "description": "Entrada inválida o campo no permitido."
+          },
+          "403": {
+            "description": "Permiso, CSRF u origen rechazado."
+          },
+          "409": {
+            "description": "Estado, versión o cantidades incompatibles."
+          },
+          "429": {
+            "description": "Demasiados intentos."
+          },
+          "401": {
+            "description": "Sesión ausente, vencida o revocada."
+          },
+          "404": {
+            "description": "Recurso inexistente o fuera del alcance autorizado."
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]*$"
+            }
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Obtener de /api/auth/csrf conservando cookies; Origin autorizado obligatorio."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Vacio"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/administracion/incidencias/{id}/resolver": {
+      "post": {
+        "summary": "Resolver caso asignado sin sustituir confirmaciones empresariales",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Resultado persistido o consulta autorizada."
+          },
+          "400": {
+            "description": "Entrada inválida o campo no permitido."
+          },
+          "403": {
+            "description": "Permiso, CSRF u origen rechazado."
+          },
+          "409": {
+            "description": "Estado, versión o cantidades incompatibles."
+          },
+          "429": {
+            "description": "Demasiados intentos."
+          },
+          "401": {
+            "description": "Sesión ausente, vencida o revocada."
+          },
+          "404": {
+            "description": "Recurso inexistente o fuera del alcance autorizado."
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]*$"
+            }
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Obtener de /api/auth/csrf conservando cookies; Origin autorizado obligatorio."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Resolver"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/administracion/incidencias/{id}/evidencias/{fileId}": {
+      "get": {
+        "summary": "Evidencia necesaria del caso asignado; descarga auditada",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Resultado persistido o consulta autorizada."
+          },
+          "400": {
+            "description": "Entrada inválida o campo no permitido."
+          },
+          "403": {
+            "description": "Permiso, CSRF u origen rechazado."
+          },
+          "409": {
+            "description": "Estado, versión o cantidades incompatibles."
+          },
+          "429": {
+            "description": "Demasiados intentos."
+          },
+          "401": {
+            "description": "Sesión ausente, vencida o revocada."
+          },
+          "404": {
+            "description": "Recurso inexistente o fuera del alcance autorizado."
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]*$"
+            }
+          },
+          {
+            "name": "fileId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]*$"
+            }
+          }
+        ]
+      }
+    },
+    "/api/mi-cuenta/consentimientos": {
+      "get": {
+        "summary": "Preferencia opcional más reciente",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Resultado persistido o consulta autorizada."
+          },
+          "400": {
+            "description": "Entrada inválida o campo no permitido."
+          },
+          "403": {
+            "description": "Permiso, CSRF u origen rechazado."
+          },
+          "409": {
+            "description": "Estado, versión o cantidades incompatibles."
+          },
+          "429": {
+            "description": "Demasiados intentos."
+          },
+          "401": {
+            "description": "Sesión ausente, vencida o revocada."
+          },
+          "404": {
+            "description": "Recurso inexistente o fuera del alcance autorizado."
+          }
+        }
+      },
+      "put": {
+        "summary": "Registrar nueva decisión opcional sin borrar historial",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Resultado persistido o consulta autorizada."
+          },
+          "400": {
+            "description": "Entrada inválida o campo no permitido."
+          },
+          "403": {
+            "description": "Permiso, CSRF u origen rechazado."
+          },
+          "409": {
+            "description": "Estado, versión o cantidades incompatibles."
+          },
+          "429": {
+            "description": "Demasiados intentos."
+          },
+          "401": {
+            "description": "Sesión ausente, vencida o revocada."
+          },
+          "404": {
+            "description": "Recurso inexistente o fuera del alcance autorizado."
+          }
+        },
+        "parameters": [
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Obtener de /api/auth/csrf conservando cookies; Origin autorizado obligatorio."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Consentimiento"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/mi-cuenta/exportacion": {
+      "post": {
+        "summary": "Exportar perfil, aceptaciones, consentimientos y derechos propios",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "JSON descargable; excluye credenciales, tokens y datos privados de otras personas."
+          },
+          "400": {
+            "description": "Entrada inválida o campo no permitido."
+          },
+          "403": {
+            "description": "Permiso, CSRF u origen rechazado."
+          },
+          "409": {
+            "description": "Estado, versión o cantidades incompatibles."
+          },
+          "429": {
+            "description": "Demasiados intentos."
+          },
+          "401": {
+            "description": "Sesión ausente, vencida o revocada."
+          },
+          "404": {
+            "description": "Recurso inexistente o fuera del alcance autorizado."
+          }
+        },
+        "parameters": [
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Obtener de /api/auth/csrf conservando cookies; Origin autorizado obligatorio."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PasswordActual"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/mi-cuenta/derechos": {
+      "get": {
+        "summary": "Historial propio de solicitudes de derechos",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Resultado persistido o consulta autorizada."
+          },
+          "400": {
+            "description": "Entrada inválida o campo no permitido."
+          },
+          "403": {
+            "description": "Permiso, CSRF u origen rechazado."
+          },
+          "409": {
+            "description": "Estado, versión o cantidades incompatibles."
+          },
+          "429": {
+            "description": "Demasiados intentos."
+          },
+          "401": {
+            "description": "Sesión ausente, vencida o revocada."
+          },
+          "404": {
+            "description": "Recurso inexistente o fuera del alcance autorizado."
+          }
+        }
+      },
+      "post": {
+        "summary": "Recibir solicitud verificada por contraseña; no ejecutar eliminación",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Resultado persistido o consulta autorizada."
+          },
+          "400": {
+            "description": "Entrada inválida o campo no permitido."
+          },
+          "403": {
+            "description": "Permiso, CSRF u origen rechazado."
+          },
+          "409": {
+            "description": "Estado, versión o cantidades incompatibles."
+          },
+          "429": {
+            "description": "Demasiados intentos."
+          },
+          "401": {
+            "description": "Sesión ausente, vencida o revocada."
+          },
+          "404": {
+            "description": "Recurso inexistente o fuera del alcance autorizado."
+          }
+        },
+        "parameters": [
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Obtener de /api/auth/csrf conservando cookies; Origin autorizado obligatorio."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Derecho"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/administracion/derechos": {
+      "get": {
+        "summary": "Cola de revisión; derechos.procesar",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Hasta 100 solicitudes no resueltas; ejecución_baja_habilitada=false."
+          },
+          "400": {
+            "description": "Entrada inválida o campo no permitido."
+          },
+          "403": {
+            "description": "Permiso, CSRF u origen rechazado."
+          },
+          "409": {
+            "description": "Estado, versión o cantidades incompatibles."
+          },
+          "429": {
+            "description": "Demasiados intentos."
+          },
+          "401": {
+            "description": "Sesión ausente, vencida o revocada."
+          },
+          "404": {
+            "description": "Recurso inexistente o fuera del alcance autorizado."
+          }
+        }
+      }
+    },
+    "/api/administracion/derechos/{id}/revisar": {
+      "post": {
+        "summary": "Registrar revisión pendiente sin prometer eliminación",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Resultado persistido o consulta autorizada."
+          },
+          "400": {
+            "description": "Entrada inválida o campo no permitido."
+          },
+          "403": {
+            "description": "Permiso, CSRF u origen rechazado."
+          },
+          "409": {
+            "description": "Estado, versión o cantidades incompatibles."
+          },
+          "429": {
+            "description": "Demasiados intentos."
+          },
+          "401": {
+            "description": "Sesión ausente, vencida o revocada."
+          },
+          "404": {
+            "description": "Recurso inexistente o fuera del alcance autorizado."
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]*$"
+            }
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Obtener de /api/auth/csrf conservando cookies; Origin autorizado obligatorio."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NotaRevision"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/recuperacion": {
+      "post": {
+        "summary": "Aviso genérico independiente de existencia de cuenta",
+        "security": [],
+        "responses": {
+          "202": {
+            "description": "No se envió correo; canal externo pendiente."
+          },
+          "400": {
+            "description": "Entrada inválida o campo no permitido."
+          },
+          "403": {
+            "description": "Permiso, CSRF u origen rechazado."
+          },
+          "409": {
+            "description": "Estado, versión o cantidades incompatibles."
+          },
+          "429": {
+            "description": "Demasiados intentos."
+          }
+        },
+        "parameters": [
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Obtener de /api/auth/csrf conservando cookies; Origin autorizado obligatorio."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecuperacionPublica"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/administracion/recuperacion": {
+      "post": {
+        "summary": "Emitir enlace manual solo en desarrollo y tras verificar identidad",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Entrega visible una sola vez; no enviada por correo. Token de una hora, revoca el anterior."
+          },
+          "400": {
+            "description": "Entrada inválida o campo no permitido."
+          },
+          "403": {
+            "description": "Permiso, CSRF u origen rechazado."
+          },
+          "409": {
+            "description": "Estado, versión o cantidades incompatibles."
+          },
+          "429": {
+            "description": "Demasiados intentos."
+          },
+          "401": {
+            "description": "Sesión ausente, vencida o revocada."
+          },
+          "404": {
+            "description": "Recurso inexistente o fuera del alcance autorizado."
+          }
+        },
+        "parameters": [
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Obtener de /api/auth/csrf conservando cookies; Origin autorizado obligatorio."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecuperacionManual"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/restablecer": {
+      "post": {
+        "summary": "Restablecer contraseña mediante token y revocar todos los accesos anteriores",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Resultado persistido o consulta autorizada."
+          },
+          "400": {
+            "description": "Entrada inválida o campo no permitido."
+          },
+          "403": {
+            "description": "Permiso, CSRF u origen rechazado."
+          },
+          "409": {
+            "description": "Estado, versión o cantidades incompatibles."
+          },
+          "429": {
+            "description": "Demasiados intentos."
+          },
+          "410": {
+            "description": "Token inválido, vencido, usado o revocado; mensaje único."
+          }
+        },
+        "parameters": [
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Obtener de /api/auth/csrf conservando cookies; Origin autorizado obligatorio."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Restablecer"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/equipo/miembros/{id}/reactivar": {
+      "post": {
+        "summary": "Reactivar miembro propio con sus funciones anteriores",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Resultado persistido o consulta autorizada."
+          },
+          "400": {
+            "description": "Entrada inválida o campo no permitido."
+          },
+          "403": {
+            "description": "Permiso, CSRF u origen rechazado."
+          },
+          "409": {
+            "description": "Estado, versión o cantidades incompatibles."
+          },
+          "429": {
+            "description": "Demasiados intentos."
+          },
+          "401": {
+            "description": "Sesión ausente, vencida o revocada."
+          },
+          "404": {
+            "description": "Recurso inexistente o fuera del alcance autorizado."
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]*$"
+            }
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Obtener de /api/auth/csrf conservando cookies; Origin autorizado obligatorio."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Motivo"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/administracion/cuentas": {
+      "get": {
+        "summary": "Cuentas globales; roles_globales.gestionar",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Resultado persistido o consulta autorizada."
+          },
+          "400": {
+            "description": "Entrada inválida o campo no permitido."
+          },
+          "403": {
+            "description": "Permiso, CSRF u origen rechazado."
+          },
+          "409": {
+            "description": "Estado, versión o cantidades incompatibles."
+          },
+          "429": {
+            "description": "Demasiados intentos."
+          },
+          "401": {
+            "description": "Sesión ausente, vencida o revocada."
+          },
+          "404": {
+            "description": "Recurso inexistente o fuera del alcance autorizado."
+          }
+        }
+      },
+      "post": {
+        "summary": "Crear cuenta global sin convertir cuentas empresariales",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Resultado persistido o consulta autorizada."
+          },
+          "400": {
+            "description": "Entrada inválida o campo no permitido."
+          },
+          "403": {
+            "description": "Permiso, CSRF u origen rechazado."
+          },
+          "409": {
+            "description": "Estado, versión o cantidades incompatibles."
+          },
+          "429": {
+            "description": "Demasiados intentos."
+          },
+          "401": {
+            "description": "Sesión ausente, vencida o revocada."
+          },
+          "404": {
+            "description": "Recurso inexistente o fuera del alcance autorizado."
+          }
+        },
+        "parameters": [
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Obtener de /api/auth/csrf conservando cookies; Origin autorizado obligatorio."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CuentaGlobal"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/administracion/cuentas/{id}": {
+      "put": {
+        "summary": "Actualizar funciones y estado; proteger último administrador activo",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Resultado persistido o consulta autorizada."
+          },
+          "400": {
+            "description": "Entrada inválida o campo no permitido."
+          },
+          "403": {
+            "description": "Permiso, CSRF u origen rechazado."
+          },
+          "409": {
+            "description": "Estado, versión o cantidades incompatibles."
+          },
+          "429": {
+            "description": "Demasiados intentos."
+          },
+          "401": {
+            "description": "Sesión ausente, vencida o revocada."
+          },
+          "404": {
+            "description": "Recurso inexistente o fuera del alcance autorizado."
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]*$"
+            }
+          },
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Obtener de /api/auth/csrf conservando cookies; Origin autorizado obligatorio."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ActualizarGlobal"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/administracion/politicas": {
+      "get": {
+        "summary": "Versiones de políticas; politicas.gestionar",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Resultado persistido o consulta autorizada."
+          },
+          "400": {
+            "description": "Entrada inválida o campo no permitido."
+          },
+          "403": {
+            "description": "Permiso, CSRF u origen rechazado."
+          },
+          "409": {
+            "description": "Estado, versión o cantidades incompatibles."
+          },
+          "429": {
+            "description": "Demasiados intentos."
+          },
+          "401": {
+            "description": "Sesión ausente, vencida o revocada."
+          },
+          "404": {
+            "description": "Recurso inexistente o fuera del alcance autorizado."
+          }
+        }
+      },
+      "post": {
+        "summary": "Crear nueva versión de borrador local vigente sin reescribir contenido anterior",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Resultado persistido o consulta autorizada."
+          },
+          "400": {
+            "description": "Entrada inválida o campo no permitido."
+          },
+          "403": {
+            "description": "Permiso, CSRF u origen rechazado."
+          },
+          "409": {
+            "description": "Estado, versión o cantidades incompatibles."
+          },
+          "429": {
+            "description": "Demasiados intentos."
+          },
+          "401": {
+            "description": "Sesión ausente, vencida o revocada."
+          },
+          "404": {
+            "description": "Recurso inexistente o fuera del alcance autorizado."
+          }
+        },
+        "parameters": [
+          {
+            "name": "X-CSRF-Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Obtener de /api/auth/csrf conservando cookies; Origin autorizado obligatorio."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BorradorPolitica"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/administracion/auditoria": {
+      "get": {
+        "summary": "Metadatos de auditoría; auditoria.consultar",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Resultado persistido o consulta autorizada."
+          },
+          "400": {
+            "description": "Entrada inválida o campo no permitido."
+          },
+          "403": {
+            "description": "Permiso, CSRF u origen rechazado."
+          },
+          "409": {
+            "description": "Estado, versión o cantidades incompatibles."
+          },
+          "429": {
+            "description": "Demasiados intentos."
+          },
+          "401": {
+            "description": "Sesión ausente, vencida o revocada."
+          },
+          "404": {
+            "description": "Recurso inexistente o fuera del alcance autorizado."
+          }
+        },
+        "parameters": [
+          {
+            "name": "pagina",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 10000,
+              "default": 1
+            }
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "SessionCookie": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "no_session"
+      }
+    },
+    "schemas": {
+      "Solicitud": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "oferta_id": {
+            "type": "string",
+            "pattern": "^[1-9][0-9]*$"
+          },
+          "necesidad_id": {
+            "type": "string",
+            "pattern": "^[1-9][0-9]*$",
+            "nullable": true
+          },
+          "cantidad": {
+            "type": "string",
+            "pattern": "^(0|[1-9][0-9]{0,10})(\\.[0-9]{1,3})?$",
+            "description": "Mayor que cero; decimal exacto con punto."
+          },
+          "condiciones": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4000
+          },
+          "fecha_prevista": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "oferta_intercambio_id": {
+            "type": "string",
+            "pattern": "^[1-9][0-9]*$",
+            "nullable": true
+          },
+          "cantidad_intercambio": {
+            "type": "string",
+            "pattern": "^(0|[1-9][0-9]{0,10})(\\.[0-9]{1,3})?$",
+            "description": "Mayor que cero; decimal exacto con punto.",
+            "nullable": true
+          },
+          "precio_unitario_acordado": {
+            "type": "string",
+            "nullable": true,
+            "pattern": "^(0|[1-9][0-9]{0,11})(\\.[0-9]{1,2})?$"
+          },
+          "moneda": {
+            "type": "string",
+            "enum": [
+              "CRC",
+              "USD"
+            ],
+            "nullable": true
+          }
+        },
+        "required": [
+          "oferta_id",
+          "cantidad",
+          "condiciones"
+        ]
+      },
+      "Propuesta": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "version": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2147483647
+          },
+          "cantidad": {
+            "type": "string",
+            "pattern": "^(0|[1-9][0-9]{0,10})(\\.[0-9]{1,3})?$",
+            "description": "Mayor que cero; decimal exacto con punto."
+          },
+          "condiciones": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4000
+          },
+          "fecha_prevista": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "oferta_intercambio_id": {
+            "type": "string",
+            "pattern": "^[1-9][0-9]*$",
+            "nullable": true
+          },
+          "cantidad_intercambio": {
+            "type": "string",
+            "pattern": "^(0|[1-9][0-9]{0,10})(\\.[0-9]{1,3})?$",
+            "description": "Mayor que cero; decimal exacto con punto.",
+            "nullable": true
+          },
+          "precio_unitario_acordado": {
+            "type": "string",
+            "nullable": true,
+            "pattern": "^(0|[1-9][0-9]{0,11})(\\.[0-9]{1,2})?$"
+          },
+          "moneda": {
+            "type": "string",
+            "enum": [
+              "CRC",
+              "USD"
+            ],
+            "nullable": true
+          }
+        },
+        "required": [
+          "version",
+          "cantidad",
+          "condiciones"
+        ]
+      },
+      "Aceptar": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "version": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2147483647
+          }
+        },
+        "required": [
+          "version"
+        ]
+      },
+      "Motivo": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "motivo": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1000
+          }
+        },
+        "required": [
+          "motivo"
+        ]
+      },
+      "Mensaje": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "contenido": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4000
+          }
+        },
+        "required": [
+          "contenido"
+        ]
+      },
+      "Entrega": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "clave_idempotencia": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "fecha": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "lineas": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 2,
+            "items": {
+              "$ref": "#/components/schemas/LineaEntrega"
+            }
+          }
+        },
+        "required": [
+          "clave_idempotencia",
+          "fecha",
+          "lineas"
+        ]
+      },
+      "LineaEntrega": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "acuerdo_linea_id": {
+            "type": "string",
+            "pattern": "^[1-9][0-9]*$"
+          },
+          "cantidad": {
+            "type": "string",
+            "pattern": "^(0|[1-9][0-9]{0,10})(\\.[0-9]{1,3})?$",
+            "description": "Mayor que cero; decimal exacto con punto."
+          },
+          "masa_kg": {
+            "type": "string",
+            "pattern": "^(0|[1-9][0-9]{0,10})(\\.[0-9]{1,3})?$",
+            "description": "Mayor que cero; decimal exacto con punto.",
+            "nullable": true
+          },
+          "metodo_masa": {
+            "type": "string",
+            "enum": [
+              "medido",
+              "estimado"
+            ],
+            "nullable": true
+          },
+          "factor_kg": {
+            "type": "string",
+            "nullable": true,
+            "pattern": "^(0|[1-9][0-9]{0,7})(\\.[0-9]{1,6})?$"
+          },
+          "fuente_factor": {
+            "type": "string",
+            "maxLength": 255,
+            "nullable": true
+          }
+        },
+        "required": [
+          "acuerdo_linea_id",
+          "cantidad"
+        ],
+        "description": "Sin masa: método y demás campos nulos. Medido: masa_kg y sin factor/fuente. Estimado: factor_kg y fuente_factor, sin masa enviada; cálculo servidor. IDs de línea únicos."
+      },
+      "Confirmacion": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "tipo": {
+            "type": "string",
+            "enum": [
+              "recepcion",
+              "aprovechamiento"
+            ]
+          },
+          "conforme": {
+            "type": "boolean"
+          },
+          "observacion": {
+            "type": "string",
+            "maxLength": 4000
+          }
+        },
+        "required": [
+          "tipo",
+          "conforme"
+        ],
+        "description": "No conforme requiere observación no vacía. Recepción de ambas empresas antes del uso; receptor declara uso primero fuera de intercambio."
+      },
+      "Reporte": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "oferta_id": {
+            "type": "string",
+            "pattern": "^[1-9][0-9]*$"
+          },
+          "acuerdo_id": {
+            "type": "string",
+            "pattern": "^[1-9][0-9]*$"
+          },
+          "motivo": {
+            "type": "string",
+            "minLength": 5,
+            "maxLength": 4000
+          }
+        },
+        "required": [
+          "motivo"
+        ],
+        "oneOf": [
+          {
+            "required": [
+              "oferta_id"
+            ]
+          },
+          {
+            "required": [
+              "acuerdo_id"
+            ]
+          }
+        ]
+      },
+      "Resolver": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "accion": {
+            "type": "string",
+            "enum": [
+              "retomar_entrega",
+              "anular_entrega",
+              "pausar_oferta",
+              "sin_cambio"
+            ]
+          },
+          "motivo": {
+            "type": "string",
+            "minLength": 10,
+            "maxLength": 4000
+          }
+        },
+        "required": [
+          "accion",
+          "motivo"
+        ]
+      },
+      "Consentimiento": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "comunicaciones_opcionales": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "comunicaciones_opcionales"
+        ]
+      },
+      "PasswordActual": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "password": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 72
+          }
+        },
+        "required": [
+          "password"
+        ]
+      },
+      "Derecho": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "tipo": {
+            "type": "string",
+            "enum": [
+              "acceso",
+              "rectificacion",
+              "eliminacion",
+              "baja",
+              "baja_empresa"
+            ]
+          },
+          "detalle": {
+            "type": "string",
+            "minLength": 10,
+            "maxLength": 4000
+          },
+          "password": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 72
+          }
+        },
+        "required": [
+          "tipo",
+          "detalle",
+          "password"
+        ]
+      },
+      "NotaRevision": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "motivo": {
+            "type": "string",
+            "minLength": 10,
+            "maxLength": 4000
+          }
+        },
+        "required": [
+          "motivo"
+        ]
+      },
+      "RecuperacionPublica": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "correo": {
+            "type": "string",
+            "format": "email",
+            "maxLength": 254
+          }
+        },
+        "required": [
+          "correo"
+        ]
+      },
+      "RecuperacionManual": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "usuario_id": {
+            "type": "string",
+            "pattern": "^[1-9][0-9]*$"
+          },
+          "identidad_verificada": {
+            "type": "boolean",
+            "enum": [
+              true
+            ]
+          },
+          "motivo": {
+            "type": "string",
+            "minLength": 10,
+            "maxLength": 4000
+          }
+        },
+        "required": [
+          "usuario_id",
+          "identidad_verificada",
+          "motivo"
+        ]
+      },
+      "Restablecer": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "token": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 12,
+            "maxLength": 72,
+            "description": "Máximo 72 bytes UTF-8."
+          }
+        },
+        "required": [
+          "token",
+          "password"
+        ]
+      },
+      "CuentaGlobal": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "nombre": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          },
+          "correo": {
+            "type": "string",
+            "format": "email",
+            "maxLength": 254
+          },
+          "password": {
+            "type": "string",
+            "minLength": 12,
+            "maxLength": 72
+          },
+          "funciones": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 2,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "enum": [
+                "administrador_plataforma",
+                "moderador"
+              ]
+            }
+          },
+          "motivo": {
+            "type": "string",
+            "minLength": 10,
+            "maxLength": 4000
+          }
+        },
+        "required": [
+          "nombre",
+          "correo",
+          "password",
+          "funciones",
+          "motivo"
+        ]
+      },
+      "BorradorPolitica": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "tipo": {
+            "type": "string",
+            "enum": [
+              "terminos",
+              "privacidad"
+            ]
+          },
+          "version": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 40
+          },
+          "contenido": {
+            "type": "string",
+            "minLength": 20,
+            "maxLength": 12000
+          },
+          "motivo": {
+            "type": "string",
+            "minLength": 10,
+            "maxLength": 4000
+          }
+        },
+        "required": [
+          "tipo",
+          "version",
+          "contenido",
+          "motivo"
+        ]
+      },
+      "Vacio": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {}
+      },
+      "ActualizarGlobal": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "funciones": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 2,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "enum": [
+                "administrador_plataforma",
+                "moderador"
+              ]
+            }
+          },
+          "estado": {
+            "type": "string",
+            "enum": [
+              "activo",
+              "inactivo"
+            ]
+          },
+          "motivo": {
+            "type": "string",
+            "minLength": 10,
+            "maxLength": 4000
+          }
+        },
+        "required": [
+          "funciones",
+          "estado",
+          "motivo"
+        ]
+      }
+    }
+  }
+}

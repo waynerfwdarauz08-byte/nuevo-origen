@@ -5,16 +5,222 @@ ofertas, necesidades, solicitudes, acuerdos y entregas trazables.
 
 ## Estado del proyecto
 
-Base técnica local construida desde cero. Incluye inicio, navegación básica,
-consulta de salud API/MySQL y persistencia inicial de roles y permisos.
-El responsable reportó validación manual de registro, acceso, perfiles,
-teclado y responsive a 360/768/1440 px en la versión previa a equipo.
-Los ajustes visuales y la revisión de las pantallas nuevas siguen pendientes; ver TASKS.md.
-Hay registro empresarial, sesión real y perfiles privados propios (ADR 0007).
-Hay gestión de equipo e invitaciones con entrega manual exclusiva de desarrollo
-(ADR 0008). No hay catálogo operativo, recuperación por correo ni integraciones.
+Aplicación local construida desde cero con identidad, equipo, materiales y
+catálogo reales. Se añadieron solicitudes, negociación versionada, acuerdos,
+reservas, entregas, aprovechamiento bilateral, indicadores y revisión de casos.
+Gobernanza local parcial: recuperación manual segura, consentimientos,
+exportación propia acotada, solicitudes de derechos y administración global.
+
+El responsable reportó validación manual de identidad, equipo y materiales.
+Las pantallas nuevas de operación, moderación, derechos y plataforma requieren
+revisión manual; ajustes visuales pendientes. Ver TASKS.md y trazabilidad local.
+
+La base en ejecución sigue siendo MySQL aislado 3307. PostgreSQL en Supabase,
+Express en Render y frontend en Vercel son destinos autorizados por el responsable,
+pendientes de migración verificada y despliegue (ADR 0010). La consigna original
+permite PostgreSQL. No se han transferido datos ni publicado el sistema.
+
+IA, RAG/Drive, n8n, correo y conexiones externas quedan al final. No hay proveedor
+de IA/modelo ni CRM externo elegido. El taller CRM aporta seguimiento por etapas;
+no exige trasladar el sistema de admisiones a Nuevo Origen.
 
 Construcción técnica desde cero con el prototipo de AI Studio como referencia visual; sin reutilización de su código.
+
+## Mensajería y mejoras del espacio privado — 2026-11-27
+
+Abrir http://127.0.0.1:5173/mi-espacio/mensajes con administración empresarial o
+gestión de acuerdos. También desde **Abrir chat** en solicitud o acuerdo.
+Bandeja independiente, historial cronológico y acceso al contexto de negocio.
+Los mensajes previos se conservan; el chat no acepta acuerdos automáticamente.
+
+Actualización cada 15 segundos con pestaña visible, carga de anteriores y envío
+idempotente para reintentar sin duplicar. No hay presencia/lectura ficticias.
+Texto no enviado en memoria al cambiar de conversación dentro del módulo;
+recargar o cerrar no garantiza conservar ese borrador.
+
+Menú privado común, botones/estados uniformes, reintento de avisos y confirmación
+según etapa de entrega. Error de conexión SQL más comprensible, sin cambiar
+contraseñas. Portada, logo y tipografías conservados.
+
+Migración aditiva `20261127000100-mensajeria-idempotente.js` aplicada en desarrollo
+y pruebas, sin reiniciar bases. En otra instalación, ejecutar `npm run db:migrate`
+desde `backend`. El backend quedó reiniciado con `npm run dev`, que recarga cambios
+de código; no abrir otro si ya está escuchando en 3001.
+
+Verificación: backend **70/70**, frontend **4/4**, compilación correcta y OpenAPI
+**0.6.0** válido, con `docs/api/mensajeria.yaml`. Revisión manual y responsive del
+nuevo marco pendientes: [guía](docs/api/pruebas-manuales-operacion.md).
+[Revisión y límites](docs/gobernanza/revision-experiencia-2026-11-27.md).
+
+## Operación y gobernanza locales
+
+ADR 0011–0013. Desde la carpeta `backend`, con la instancia aislada disponible:
+
+```powershell
+npm run db:migrate
+npm run db:seed
+npm start
+```
+
+Si estaba abierto el backend anterior, detenerlo con Ctrl+C en su terminal y
+volver a iniciarlo para cargar las nuevas rutas. No reinicializar bases.
+Las migraciones de operación y solicitudes de derechos ya se aplicaron en
+esta máquina a desarrollo y pruebas. Repetir omite las registradas.
+
+Desde `frontend`, en otra terminal:
+
+```powershell
+npm run dev
+```
+
+- Inicio: http://127.0.0.1:5173
+- Solicitudes y acuerdos: http://127.0.0.1:5173/mi-espacio/solicitudes
+- Indicadores y seguimiento: http://127.0.0.1:5173/mi-espacio/indicadores
+- Avisos propios: http://127.0.0.1:5173/mi-espacio/avisos
+- Privacidad y derechos: http://127.0.0.1:5173/mi-espacio/derechos
+- Casos asignados de moderación: http://127.0.0.1:5173/mi-espacio/incidencias
+- Cuentas globales, borradores y auditoría: http://127.0.0.1:5173/mi-espacio/plataforma
+- Recuperación: http://127.0.0.1:5173/recuperacion
+
+Las herramientas exigen permisos en backend. Las cuentas globales no pertenecen
+a empresas; el administrador empresarial no puede conceder esas funciones.
+Bootstrap interactivo de la primera cuenta global: `npm run platform:bootstrap`
+desde `backend`; elegir credenciales propias. No se creó una cuenta automática
+en desarrollo ni se reutilizan usuarios del prototipo.
+
+Prueba manual paso a paso y pendientes de teclado/responsive:
+[operación local](docs/api/pruebas-manuales-operacion.md).
+Contrato: [OpenAPI](docs/api/openapi.yaml), con módulos de materiales y operación.
+Alcance por RF: [trazabilidad](docs/referencias/trazabilidad-local.md).
+Antes de migrar o publicar: [preparación productiva](docs/gobernanza/preparacion-produccion.md).
+
+Límites explícitos:
+
+- Una solicitud no reserva; la contraparte acepta la versión revisada y reserva
+  todas las líneas en una transacción. Intercambio requiere contraprestación.
+- Recepción no equivale a uso. Solo aprovechamiento confirmado por ambas
+  empresas suma indicadores; masas medidas y estimadas se separan.
+- Moderación no confirma entregas por las empresas. Puede devolver una entrega
+  disputada a revisión o anular su registro conservando evidencia y auditoría.
+- Recuperación manual solo en desarrollo, por plataforma que verificó identidad;
+  enlace de una hora y uso único. Restablecer revoca sesiones y enlaces anteriores.
+  Nunca se informa correo enviado.
+- Exportación JSON acotada a perfil, aceptaciones, consentimientos e historial de
+  derechos propios. Supresión efectiva y exportación exhaustiva quedan pendientes.
+- Solicitudes de baja solo se reciben/revisan. No se eliminan cuentas ni empresas
+  hasta validar excepciones, conservación compartida y procedimiento del responsable.
+- Borradores de políticas versionados siguen siendo borradores locales.
+- Historial de solicitud limitado a 200 eventos; listados globales de cuentas y
+  derechos limitados a 100. Ampliación de paginación pendiente.
+
+Limpieza de tokens locales, revisión sin cambios desde `backend`:
+
+```powershell
+node --env-file-if-exists=.env scripts/retain-tokens.js
+```
+
+Para aplicar el procedimiento local después de revisar el resumen se añade
+`--apply`. Solo elimina metadatos terminales con antigüedad suficiente de
+30 días; conserva auditoría. No hay limpieza productiva programada. No ejecutar
+purgas contra servicios o bases ajenas; la herramienta rechaza producción.
+
+Verificaciones de esta entrega: backend `npm run test:mysql`, 68/68 correctas;
+frontend `npm test`, 2/2; `npm run build`, correcto; OpenAPI 0.5.0 validado.
+Los tests usan exclusivamente `nuevo_origen_test`; no son pruebas de navegador.
+
+## Materiales y catálogo local
+
+Entrega del 2026-11-26, ADR 0009. Se conserva la identidad visual; el catálogo
+real comienza vacío hasta publicar ofertas propias. Las tarjetas editoriales del
+inicio siguen identificadas como ejemplos y no se convierten en datos reales.
+
+Desde `backend`, con MySQL aislado disponible, ejecutar:
+
+```powershell
+npm run db:migrate
+npm run db:seed
+npm start
+```
+
+La migración y el seeder de materiales ya se aplicaron en esta máquina en
+desarrollo y pruebas. Repetir los comandos omite los ya registrados; no ejecutar
+undo ni reinicializar MySQL. Si había backend abierto, Ctrl+C **en su terminal**
+y volver a ejecutar `npm start` para cargar las nuevas rutas. Desde `frontend`:
+
+```powershell
+npm run dev
+```
+
+- Catálogo: http://127.0.0.1:5173/catalogo
+- Ofertas propias: http://127.0.0.1:5173/mi-espacio/ofertas
+- Necesidades propias: http://127.0.0.1:5173/mi-espacio/necesidades
+- Administración de catálogos: http://127.0.0.1:5173/mi-espacio/catalogos
+  (solo administrador de plataforma; no usar cuenta empresarial para ese ámbito).
+
+Recorrido de materiales reportado como probado por el responsable el 2026-11-26;
+se conserva como guía reproducible, sin atribuirlo a automatización:
+
+1. Iniciar sesión como administración empresarial o gestor de materiales.
+2. **Mi espacio → Mis ofertas → Crear oferta**. Elegir categoría, unidad,
+   cantidad positiva, composición, estado, ubicación aproximada, modalidad y
+   frecuencia. En venta indicar precio por unidad y moneda. Usar punto decimal.
+3. Guardar borrador. No aparece en el catálogo público. Agregar fotografía real
+   JPEG/PNG/WebP (hasta 5 MiB y 16 megapíxeles). No subir datos personales.
+4. Completar propiedades requeridas y ambas declaraciones sobre material
+   aprovechable/no peligroso. Volver a Mis ofertas y confirmar **Publicar** con motivo.
+5. Abrir catálogo sin sesión, filtrar y abrir detalle y perfil público. No deben
+   aparecer dirección privada, contactos internos ni borradores. Una cantidad
+   mínima requiere unidad: no se convierten kilos, piezas o metros.
+6. Con otra empresa, comprobar que puede ver la oferta pública y no editarla ni
+   consultar la ficha privada. Como analista/gestor de acuerdos, lectura propia
+   sin botones de modificación y rechazo de mutaciones por API.
+7. Pausar: oferta y fotos dejan de ser públicas. Reanudar vuelve a validar la ficha.
+   Para cambiar fotos hay que pausar. Archivar es terminal; no borra la ficha.
+8. Crear una necesidad con cantidad, ubicación, descripción, propiedades o
+   intervalos y fecha opcional. Activar, pausar o cerrar. Solo la empresa ve sus
+   necesidades; no se publican en el catálogo de ofertas.
+9. Recargar, comprobar persistencia, errores y estados vacíos. Revisar teclado,
+   etiquetas, foco y tamaños 360/768/1440 px. No darlo por probado automáticamente.
+
+Catálogos: inicialmente ocho categorías, diez unidades y tres dimensiones
+opcionales. No hay límite fijo de categorías. Para crear una **cuenta global nueva**
+de plataforma elegida explícitamente por el responsable, desde una terminal
+interactiva en `backend`, con MySQL disponible:
+
+```powershell
+npm run platform:bootstrap
+```
+
+Pide nombre, correo nuevo y contraseña oculta con confirmación. No imprime ni
+guarda contraseña en claro, no envía correos y no convierte cuentas existentes.
+Solo admite la base local de desarrollo en 3307. No se ejecutó automáticamente
+ni se creó una cuenta global de demostración. Después iniciar sesión con esa
+cuenta para crear/editar/desactivar categorías, unidades, propiedades y plantillas.
+Tipo/unidad de propiedad y código/magnitud de unidad son inmutables; para cambiar
+su significado crear otra definición. Los cambios de plantilla se verifican al
+publicar y editar, sin reescribir fichas históricas de forma automática.
+
+Persistencia: migración `20261126000100-materiales-catalogo.js` y seeder
+`20261126000100-catalogos-materiales.js`, ambos aditivos, sin purgar datos.
+Fotos normalizadas en `.local/uploads`; pruebas en `.local/test-uploads`, ignoradas
+por Git. Solo WebP reencodificado, clave aleatoria, hash/tamaño en MySQL; no se
+conserva EXIF ni el original. Las fotos retiradas dejan de servirse y conservan
+registro privado hasta definir limpieza y conservación. Respaldar fotografías
+junto con MySQL; no basta con clonar Git para recuperar archivos subidos.
+
+La entrega inicial de materiales usó API 0.4.0; la versión vigente es 0.6.0:
+`docs/api/openapi.yaml` referencia `materiales.yaml` y `operaciones.json`.
+Pruebas: `backend: npm run test:mysql`, `frontend: npm test` y `npm run build`.
+Resultado de esa entrega inicial: **50/50 pruebas backend correctas, cero omitidas; 2/2 frontend y
+compilación Vite correctas; OpenAPI válido**. Las pruebas MySQL usan
+exclusivamente `nuevo_origen_test`; no reinician bases ni tocan MySQL80.
+La compilación y API no sustituyen la revisión visual: CUA no pudo abrir navegador
+por indisponibilidad del host. El responsable posteriormente reportó el recorrido
+manual de materiales; el recorrido de operación añadido después sigue pendiente.
+
+Solicitar material abre el formulario real de propuesta. No envía la solicitud
+ni reserva automáticamente, tampoco al regresar del login.
+No se integraron IA, Drive, correo, n8n ni alojamiento. El sistema sigue local.
 El prototipo disponible en docs/referencias/prototipo-ai-studio/ es la referencia
 visual concreta para la página inicial (ADR 0006). No se trasladará ni adaptará
 su código, configuración o dependencias. La base técnica no depende de él;
@@ -140,7 +346,7 @@ La consulta tiene límite de 6 segundos. No existe persistencia en localStorage.
 
 Desde backend/, `npm test` verifica HTTP y configuración; omite explícitamente
 MySQL. Con la instancia aislada disponible, `npm run test:mysql` ejecuta las
-23 casos (incluidos subcasos y agrupación) de backend, incluyendo migraciones
+  pruebas de backend (50 casos en la entrega de materiales), incluyendo migraciones
 aditivas, seed repetido, restricciones, registro, reversión transaccional y aislamiento.
 Solo usa nuevo_origen_test. No revierte esquemas ni purga datos existentes;
 añade fixtures ficticios con identificadores únicos. La prueba anterior que
@@ -149,8 +355,8 @@ En frontend/, npm test ejecuta dos casos de retorno seguro y npm run build compi
 
 La migración inicial crea roles, permisos y rol_permiso, con PK, FK y unicidad.
 El seed crea seis roles (visitante no es un rol persistido), 36 permisos y 68
-relaciones. Esto no implementa autenticación, asignación a usuarios ni autorización
-operativa. Los permisos excepcionales siguen requiriendo motivo y recurso
+relaciones. Ese seeder por sí solo no implementa autenticación ni autorización;
+la identidad se implementa en los servicios correspondientes. Los permisos excepcionales requieren motivo y recurso
 autorizado cuando se implementen esos módulos.
 
 SequelizeMeta y SequelizeData registran migraciones y seeders ejecutados.
@@ -170,9 +376,9 @@ sin consultas a Google Fonts en tiempo de ejecución. Licencias conservadas en
 frontend/src/assets/licenses/. El logo PNG suministrado en el prototipo ya está
 integrado como archivo visual, sin reconstrucción tipográfica ni modificación.
 Hero y seis imágenes ilustrativas también proceden de los archivos suministrados.
-La búsqueda y tarjetas son presentación identificada: no hay catálogo operativo.
-Las acciones de catálogo/publicación pendientes abren una explicación; registro
-y acceso ahora conectan a la API real. No se publican materiales desde el inicio.
+Las tarjetas del inicio son presentación identificada; el catálogo operativo
+está separado en /catalogo. Búsqueda y publicación llevan a recorridos reales;
+publicar exige sesión, permiso y confirmación, nunca se ejecuta desde una tarjeta editorial.
 /estado y su conexión permanecen separados. Sin controles del inspector.
 Comparación de archivos y diferencias deliberadas documentadas en ADR 0006;
 fidelidad y responsive siguen sujetos a comprobación visual.
@@ -217,7 +423,7 @@ Las cuentas de pruebas conservadas son ficticias; no son accesos de demostració
 La gestión de equipo permite cambiar funciones y desactivar integrantes con
 protección transaccional del último administrador activo, incluso bajo concurrencia.
 
-Contrato actualizado: docs/api/openapi.yaml (0.3.0). Decisiones: ADR 0007 y 0008.
+Contrato actualizado: docs/api/openapi.yaml (0.4.0). Decisiones: ADR 0007–0009.
 Recuperación por correo, cambio verificado de correo, reactivación de miembros,
 revocación de preferencias opcionales y renovación de sesión quedan pendientes.
 

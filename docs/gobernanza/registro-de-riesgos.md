@@ -59,3 +59,21 @@ Para cerrar un riesgo registrar:
 
 No inventar plazos legales de notificación.
 Validarlos antes de adoptar el procedimiento productivo.
+## Nota de evidencia local — 2026-11-26
+
+Las pruebas locales de operación y gobernanza reducen incertidumbre técnica,
+pero no cierran riesgos productivos ni sustituyen aprobación del responsable.
+Ver TASKS.md para el resultado completo de pruebas y sus límites.
+
+- Reservas y entregas: verificación de cantidades exactas, concurrencia,
+  idempotencia, cancelación parcial y rollback con MySQL exclusivo de pruebas.
+- Privacidad: conversación/evidencia ajena denegadas; casos asignados y auditados;
+  exportación propia acotada y recuperación autorizada antes de consultar cuentas.
+- Administración: última administración empresarial y de plataforma protegidas
+  transaccionalmente en los casos probados. No es prueba de carga general.
+- Riesgos abiertos: ensayo PostgreSQL y diferencias de motor, preservación de
+  archivos en despliegue, respaldo/restauración, límites distribuidos, regiones,
+  responsables, políticas definitivas y ejecución de supresión compartida.
+- Correo, IA, RAG/Drive, CRM externo y n8n no están conectados; sus riesgos siguen
+  pendientes de evaluación antes de cada integración. No hay envío simulado.
+- Validación visual, teclado y responsive de pantallas nuevas pendientes.

@@ -1,12 +1,30 @@
 module.exports = (error, req, res, next) => {
   if (res.headersSent) return next(error);
-  if (error instanceof require("../services/identity.service").IdentityError)
+  if (
+    [
+      "SequelizeConnectionError",
+      "SequelizeConnectionRefusedError",
+      "SequelizeConnectionTimedOutError",
+      "SequelizeConnectionAcquireTimeoutError",
+      "SequelizeHostNotFoundError",
+      "SequelizeHostNotReachableError",
+    ].includes(error.name)
+  )
     return res
-      .status(error.status)
+      .status(503)
       .json({
-        error: { code: error.code, message: error.message },
+        error: {
+          code: "DATABASE_UNAVAILABLE",
+          message:
+            "La base de datos no está disponible temporalmente. Volvé a intentarlo cuando se restablezca el servicio.",
+        },
         requestId: req.requestId,
       });
+  if (error instanceof require("../services/identity.service").IdentityError)
+    return res.status(error.status).json({
+      error: { code: error.code, message: error.message },
+      requestId: req.requestId,
+    });
   const invalid = error.type === "entity.parse.failed";
   const large = error.type === "entity.too.large";
   res.status(invalid ? 400 : large ? 413 : 500).json({

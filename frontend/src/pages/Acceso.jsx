@@ -72,7 +72,8 @@ export default function Acceso() {
         .
       </p>
       <p className="presentation-note">
-        La recuperación por correo todavía no está habilitada.
+        <Link to="/recuperacion">Recuperar acceso</Link>. La recuperación por
+        correo todavía no está habilitada.
       </p>
     </section>
   );

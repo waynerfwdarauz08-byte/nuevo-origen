@@ -1,5 +1,6 @@
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { useSession } from "../components/SessionProvider";
+import PrivateLayout from "../components/PrivateLayout";
 export default function RequireSession() {
   const { session, loading, error, refresh } = useSession();
   const location = useLocation();
@@ -30,5 +31,9 @@ export default function RequireSession() {
         replace
       />
     );
-  return <Outlet />;
+  return (
+    <PrivateLayout>
+      <Outlet />
+    </PrivateLayout>
+  );
 }

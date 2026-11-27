@@ -45,6 +45,20 @@ module.exports = ({ models, config, identity, auth, protection, limiter }) => {
   );
   const publicLimit = limiter(config.inviteLimit);
   router.post(
+    "/equipo/miembros/:id/reactivar",
+    ...change,
+    validate(schemas.deactivate),
+    async (req, res) =>
+      res.json(
+        await team.reactivate(
+          req.auth,
+          req.params.id,
+          req.validated,
+          req.requestId,
+        ),
+      ),
+  );
+  router.post(
     "/invitaciones/consultar",
     protection.protect,
     publicLimit,

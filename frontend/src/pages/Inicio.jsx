@@ -129,12 +129,9 @@ function LineIcon({ path }) {
   );
 }
 export default function Inicio() {
-  const navigate=useNavigate();
+  const navigate = useNavigate();
   const { pending } = useOutletContext();
-  const explainCatalog = () =>
-    pending(
-      "El catálogo todavía no está habilitado. Las imágenes y tarjetas de esta página son ejemplos de presentación, no ofertas reales.",
-    );
+  const explainCatalog = () => navigate("/catalogo");
   return (
     <>
       <section className="home-intro page-width">
@@ -146,10 +143,13 @@ export default function Inicio() {
               posibilidades de aprovechamiento.
             </p>
             <div className="home-actions">
-              <a className="button" href="#materiales">
+              <a className="button" href="/catalogo">
                 Explorar materiales
               </a>
-              <button className="button secondary" onClick={() => pending()}>
+              <button
+                className="button secondary"
+                onClick={() => navigate("/mi-espacio/ofertas/nueva")}
+              >
                 Publicar material
               </button>
             </div>
@@ -170,7 +170,14 @@ export default function Inicio() {
           aria-describedby="search-note"
           onSubmit={(event) => {
             event.preventDefault();
-            explainCatalog();
+            const fields = new FormData(event.currentTarget);
+            const query = new URLSearchParams();
+            if (fields.get("material")) query.set("q", fields.get("material"));
+            if (fields.get("categoria"))
+              query.set("categoria", fields.get("categoria"));
+            if (fields.get("provincia"))
+              query.set("ubicacion", fields.get("provincia"));
+            navigate("/catalogo?" + query);
           }}
         >
           <div className="quick-search__query">
@@ -215,8 +222,8 @@ export default function Inicio() {
           </button>
         </form>
         <p className="presentation-note" id="search-note">
-          Vista de presentación: la búsqueda y la publicación
-          todavía no están habilitados.
+          Buscá ofertas reales en el catálogo. Las imágenes editoriales de este
+          inicio son ilustrativas.
         </p>
       </section>
       <section
@@ -235,7 +242,9 @@ export default function Inicio() {
             <button
               className="category-tile"
               key={category}
-              onClick={explainCatalog}
+              onClick={() =>
+                navigate("/catalogo?categoria=" + encodeURIComponent(category))
+              }
             >
               <span>
                 <LineIcon path={categoryPaths[index]} />
@@ -365,7 +374,12 @@ export default function Inicio() {
               buscar insumos para tus procesos.
             </p>
           </div>
-          <button className="button button--light" onClick={() => navigate('/registro?volver='+encodeURIComponent('/#materiales'))}>
+          <button
+            className="button button--light"
+            onClick={() =>
+              navigate("/registro?volver=" + encodeURIComponent("/#materiales"))
+            }
+          >
             Registrar mi empresa
           </button>
         </div>

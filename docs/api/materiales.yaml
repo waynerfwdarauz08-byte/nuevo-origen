@@ -1,0 +1,431 @@
+openapi: 3.0.3
+info:
+  title: Nuevo Origen — materiales locales
+  version: 0.1.0
+  description: >-
+    RF-05 a RF-08; ADR 0009. Decimales como cadenas, sin exponentes ni coma.
+    Mutaciones JSON con Origin autorizado y X-CSRF-Token obtenido de /api/auth/csrf.
+    Fotos multipart usan el mismo desafío, cookie y Origin; no definir Content-Type manualmente.
+    No hay solicitudes, reservas ni conversiones automáticas. Cache-Control no-store.
+servers:
+  - url: http://127.0.0.1:3001
+paths:
+  /api/catalogos/materiales:
+    get:
+      summary: Categorías activas y definiciones para lectura de fichas históricas
+      responses:
+        '200': {description: 'categorias/unidades/propiedades. Categoría incluye propiedades con requerida. Datos públicos; no usuarios.'}
+  /api/administracion/catalogos:
+    get:
+      summary: Todos los catálogos, incluso inactivos; solo administrador_plataforma y categorias.gestionar
+      security: [{SessionCookie: []}]
+      responses:
+        '200': {description: Categorías con plantilla y definiciones activas e inactivas.}
+        '401': {$ref: '#/components/responses/Unauthenticated'}
+        '403': {$ref: '#/components/responses/Denied'}
+  /api/administracion/categorias:
+    post:
+      summary: Crear categoría; solo plataforma autorizada
+      parameters: [{$ref: '#/components/parameters/Origin'}]
+      security: [{SessionCookie: [], CsrfToken: []}]
+      requestBody: {$ref: '#/components/requestBodies/Categoria'}
+      responses:
+        '201': {description: 'Categoría persistida con id/nombre/descripcion/activo.'}
+        '400': {$ref: '#/components/responses/Invalid'}
+        '403': {$ref: '#/components/responses/Denied'}
+        '409': {description: Nombre duplicado.}
+  /api/administracion/categorias/{id}:
+    parameters: [{$ref: '#/components/parameters/Id'}]
+    put:
+      summary: Editar o desactivar categoría, sin borrar relaciones
+      parameters: [{$ref: '#/components/parameters/Origin'}]
+      security: [{SessionCookie: [], CsrfToken: []}]
+      requestBody: {$ref: '#/components/requestBodies/Categoria'}
+      responses:
+        '200': {description: Categoría actualizada; no altera retrospectivamente ofertas publicadas.}
+        '400': {$ref: '#/components/responses/Invalid'}
+        '403': {$ref: '#/components/responses/Denied'}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '409': {description: Nombre duplicado.}
+  /api/administracion/unidades:
+    post:
+      summary: Crear unidad; solo plataforma autorizada
+      parameters: [{$ref: '#/components/parameters/Origin'}]
+      security: [{SessionCookie: [], CsrfToken: []}]
+      requestBody: {$ref: '#/components/requestBodies/Unidad'}
+      responses:
+        '201': {description: Unidad persistida.}
+        '400': {$ref: '#/components/responses/Invalid'}
+        '403': {$ref: '#/components/responses/Denied'}
+        '409': {description: Código duplicado.}
+  /api/administracion/unidades/{id}:
+    parameters: [{$ref: '#/components/parameters/Id'}]
+    put:
+      summary: Editar nombre/activo; código y magnitud inmutables
+      parameters: [{$ref: '#/components/parameters/Origin'}]
+      security: [{SessionCookie: [], CsrfToken: []}]
+      requestBody: {$ref: '#/components/requestBodies/Unidad'}
+      responses:
+        '200': {description: Unidad actualizada.}
+        '400': {$ref: '#/components/responses/Invalid'}
+        '403': {$ref: '#/components/responses/Denied'}
+        '404': {$ref: '#/components/responses/NotFound'}
+  /api/administracion/propiedades:
+    post:
+      summary: Crear propiedad numérica o textual; solo plataforma autorizada
+      parameters: [{$ref: '#/components/parameters/Origin'}]
+      security: [{SessionCookie: [], CsrfToken: []}]
+      requestBody: {$ref: '#/components/requestBodies/Propiedad'}
+      responses:
+        '201': {description: Definición persistida. Propiedad textual no admite unidad.}
+        '400': {$ref: '#/components/responses/Invalid'}
+        '403': {$ref: '#/components/responses/Denied'}
+        '409': {description: Nombre duplicado.}
+  /api/administracion/propiedades/{id}:
+    parameters: [{$ref: '#/components/parameters/Id'}]
+    put:
+      summary: Editar nombre/activo; tipo y unidad inmutables
+      parameters: [{$ref: '#/components/parameters/Origin'}]
+      security: [{SessionCookie: [], CsrfToken: []}]
+      requestBody: {$ref: '#/components/requestBodies/Propiedad'}
+      responses:
+        '200': {description: Propiedad actualizada.}
+        '400': {$ref: '#/components/responses/Invalid'}
+        '403': {$ref: '#/components/responses/Denied'}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '409': {description: Nombre duplicado.}
+  /api/administracion/categorias/{id}/propiedades:
+    parameters: [{$ref: '#/components/parameters/Id'}]
+    put:
+      summary: Sustituir plantilla de hasta 50 propiedades activas sin IDs duplicados
+      parameters: [{$ref: '#/components/parameters/Origin'}]
+      security: [{SessionCookie: [], CsrfToken: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [propiedades]
+              properties:
+                propiedades:
+                  type: array
+                  maxItems: 50
+                  items:
+                    type: object
+                    additionalProperties: false
+                    required: [propiedad_id, requerida]
+                    properties:
+                      propiedad_id: {type: string, pattern: '^[1-9]\d{0,19}$'}
+                      requerida: {type: boolean}
+      responses:
+        '200': {description: Plantilla persistida; se valida al publicar y editar sin reescribir fichas históricas.}
+        '400': {$ref: '#/components/responses/Invalid'}
+        '403': {$ref: '#/components/responses/Denied'}
+        '404': {$ref: '#/components/responses/NotFound'}
+  /api/catalogo/ofertas:
+    get:
+      summary: Catálogo público de ofertas publicadas con disponibilidad positiva y empresa activa
+      parameters:
+        - {name: q, in: query, schema: {type: string, maxLength: 120}}
+        - {name: categoria_id, in: query, schema: {type: string}}
+        - {name: unidad_id, in: query, schema: {type: string}}
+        - {name: ubicacion, in: query, schema: {type: string, maxLength: 160}}
+        - {name: modalidad, in: query, schema: {type: string, enum: [venta, donacion, intercambio]}}
+        - {name: estado_material, in: query, schema: {type: string, enum: [retazo, sobrante, usado_aprovechable, nuevo_sin_uso]}}
+        - {name: frecuencia, in: query, schema: {type: string, enum: [puntual, recurrente]}}
+        - {name: minimo, in: query, description: Requiere unidad_id; no hay conversión implícita., schema: {type: string}}
+        - {name: pagina, in: query, schema: {type: integer, minimum: 1, maximum: 10000, default: 1}}
+        - {name: orden, in: query, schema: {type: string, enum: [reciente, titulo], default: reciente}}
+      responses:
+        '200': {description: 'ofertas/pagina/total/paginas, 12 por página. Proyección pública con ficha, propiedades, empresa reducida y fotos; sin contactos internos, autor ni rutas físicas.'}
+        '400': {$ref: '#/components/responses/Invalid'}
+  /api/catalogo/ofertas/{id}:
+    parameters: [{$ref: '#/components/parameters/Id'}]
+    get:
+      summary: Detalle público; borrador/pausada/agotada/archivada no visibles
+      responses:
+        '200': {description: Oferta publicada con ficha y fotografías. Declaraciones del oferente no son certificación.}
+        '404': {$ref: '#/components/responses/NotFound'}
+  /api/catalogo/empresas/{id}:
+    parameters: [{$ref: '#/components/parameters/Id'}]
+    get:
+      summary: Perfil público de empresa activa con al menos una oferta publicada
+      responses:
+        '200': {description: 'Solo id/nombre/sector/descripcion/ubicacion_publica.'}
+        '404': {$ref: '#/components/responses/NotFound'}
+  /api/catalogo/ofertas/{id}/fotos/{fileId}:
+    parameters: [{$ref: '#/components/parameters/Id'}, {$ref: '#/components/parameters/FileId'}]
+    get:
+      summary: WebP normalizado; revalida visibilidad en cada descarga
+      responses:
+        '200':
+          description: Fotografía sin EXIF; no-store y nosniff.
+          content: {image/webp: {schema: {type: string, format: binary}}}
+        '404': {$ref: '#/components/responses/NotFound'}
+  /api/ofertas:
+    get:
+      summary: Ofertas propias en todos los estados; materiales.leer y pertenencia empresarial
+      security: [{SessionCookie: []}]
+      parameters: [{$ref: '#/components/parameters/Pagina'}, {$ref: '#/components/parameters/Query'}]
+      responses:
+        '200': {description: 'registros/pagina/total/paginas, 12 por página. Solo empresa de sesión.'}
+        '401': {$ref: '#/components/responses/Unauthenticated'}
+        '403': {$ref: '#/components/responses/Denied'}
+    post:
+      summary: Crear borrador propio; materiales.gestionar y empresa activa
+      parameters: [{$ref: '#/components/parameters/Origin'}]
+      security: [{SessionCookie: [], CsrfToken: []}]
+      requestBody: {$ref: '#/components/requestBodies/Oferta'}
+      responses:
+        '201': {description: Borrador persistido transaccionalmente con propiedades y auditoría.}
+        '400': {$ref: '#/components/responses/Invalid'}
+        '401': {$ref: '#/components/responses/Unauthenticated'}
+        '403': {$ref: '#/components/responses/Denied'}
+  /api/ofertas/{id}:
+    parameters: [{$ref: '#/components/parameters/Id'}]
+    get:
+      summary: Ficha propia; requiere materiales.leer y empresa de sesión
+      security: [{SessionCookie: []}]
+      responses:
+        '200': {description: 'Ficha privada, propiedades y URLs privadas de fotos.'}
+        '401': {$ref: '#/components/responses/Unauthenticated'}
+        '403': {$ref: '#/components/responses/Denied'}
+        '404': {$ref: '#/components/responses/NotFound'}
+    put:
+      summary: Sustituir campos editables propios; no acepta empresa/autor/estado/reservas/entregas
+      parameters: [{$ref: '#/components/parameters/Origin'}]
+      security: [{SessionCookie: [], CsrfToken: []}]
+      requestBody: {$ref: '#/components/requestBodies/Oferta'}
+      responses:
+        '200': {description: Oferta actualizada. Publicada debe seguir satisfaciendo reglas.}
+        '400': {$ref: '#/components/responses/Invalid'}
+        '403': {$ref: '#/components/responses/Denied'}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '409': {description: Ficha cerrada o archivada.}
+  /api/ofertas/{id}/estado:
+    parameters: [{$ref: '#/components/parameters/Id'}]
+    post:
+      summary: Publicar, pausar, reanudar o archivar; nunca auto-reserva
+      parameters: [{$ref: '#/components/parameters/Origin'}]
+      security: [{SessionCookie: [], CsrfToken: []}]
+      requestBody: {$ref: '#/components/requestBodies/Estado'}
+      responses:
+        '200': {description: Cambio transaccional auditado. Publicar exige propiedades requeridas y foto activa y ambas declaraciones.}
+        '400': {$ref: '#/components/responses/Invalid'}
+        '403': {$ref: '#/components/responses/Denied'}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '409': {description: Transición inválida; archivada terminal.}
+  /api/ofertas/{id}/fotos:
+    parameters: [{$ref: '#/components/parameters/Id'}]
+    post:
+      summary: Agregar foto a oferta propia borrador/pausada; máximo seis activas
+      parameters: [{$ref: '#/components/parameters/Origin'}]
+      security: [{SessionCookie: [], CsrfToken: []}]
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [foto]
+              properties:
+                foto: {type: string, format: binary, description: 'JPEG/PNG/WebP; hasta 5 MiB y 16 megapíxeles. Sin SVG ni animación.'}
+      responses:
+        '201': {description: Foto normalizada y ficha actualizada; no conserva nombre original ni EXIF.}
+        '400': {$ref: '#/components/responses/Invalid'}
+        '403': {$ref: '#/components/responses/Denied'}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '409': {description: Pausar antes de cambiar fotos.}
+        '413': {description: Imagen demasiado grande.}
+        '429': {description: Treinta cargas por IP cada quince minutos; límites locales en memoria.}
+  /api/ofertas/{id}/fotos/{fileId}:
+    parameters: [{$ref: '#/components/parameters/Id'}, {$ref: '#/components/parameters/FileId'}]
+    get:
+      summary: Foto privada; materiales.leer y pertenencia empresarial
+      security: [{SessionCookie: []}]
+      responses:
+        '200': {description: WebP normalizado., content: {image/webp: {schema: {type: string, format: binary}}}}
+        '401': {$ref: '#/components/responses/Unauthenticated'}
+        '403': {$ref: '#/components/responses/Denied'}
+        '404': {$ref: '#/components/responses/NotFound'}
+    delete:
+      summary: Retirar foto propia de borrador/pausada; registro privado conservado sin descarga
+      parameters: [{$ref: '#/components/parameters/Origin'}]
+      security: [{SessionCookie: [], CsrfToken: []}]
+      requestBody:
+        required: true
+        content: {application/json: {schema: {type: object, additionalProperties: false}}}
+      responses:
+        '200': {description: Ficha actualizada y retiro auditado.}
+        '403': {$ref: '#/components/responses/Denied'}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '409': {description: Pausar antes de retirar fotos.}
+  /api/necesidades:
+    get:
+      summary: Necesidades privadas de la empresa; materiales.leer
+      security: [{SessionCookie: []}]
+      parameters: [{$ref: '#/components/parameters/Pagina'}, {$ref: '#/components/parameters/Query'}]
+      responses:
+        '200': {description: 'registros/pagina/total/paginas; doce por página. Nunca catálogo público.'}
+        '401': {$ref: '#/components/responses/Unauthenticated'}
+        '403': {$ref: '#/components/responses/Denied'}
+    post:
+      summary: Crear necesidad propia en borrador con propiedades o intervalos
+      parameters: [{$ref: '#/components/parameters/Origin'}]
+      security: [{SessionCookie: [], CsrfToken: []}]
+      requestBody: {$ref: '#/components/requestBodies/Necesidad'}
+      responses:
+        '201': {description: Necesidad persistida y auditada.}
+        '400': {$ref: '#/components/responses/Invalid'}
+        '403': {$ref: '#/components/responses/Denied'}
+  /api/necesidades/{id}:
+    parameters: [{$ref: '#/components/parameters/Id'}]
+    get:
+      summary: Consultar necesidad propia
+      security: [{SessionCookie: []}]
+      responses:
+        '200': {description: Ficha y propiedades privadas.}
+        '401': {$ref: '#/components/responses/Unauthenticated'}
+        '403': {$ref: '#/components/responses/Denied'}
+        '404': {$ref: '#/components/responses/NotFound'}
+    put:
+      summary: Sustituir ficha propia editable; materiales.gestionar
+      parameters: [{$ref: '#/components/parameters/Origin'}]
+      security: [{SessionCookie: [], CsrfToken: []}]
+      requestBody: {$ref: '#/components/requestBodies/Necesidad'}
+      responses:
+        '200': {description: Necesidad actualizada.}
+        '400': {$ref: '#/components/responses/Invalid'}
+        '403': {$ref: '#/components/responses/Denied'}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '409': {description: Ficha cerrada o archivada no editable.}
+  /api/necesidades/{id}/estado:
+    parameters: [{$ref: '#/components/parameters/Id'}]
+    post:
+      summary: Activar, pausar, cerrar o archivar necesidad propia
+      parameters: [{$ref: '#/components/parameters/Origin'}]
+      security: [{SessionCookie: [], CsrfToken: []}]
+      requestBody: {$ref: '#/components/requestBodies/Estado'}
+      responses:
+        '200': {description: Estado actualizado; activar exige propiedades obligatorias. Cerrada solo admite archivar.}
+        '400': {$ref: '#/components/responses/Invalid'}
+        '403': {$ref: '#/components/responses/Denied'}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '409': {description: Transición inválida.}
+components:
+  securitySchemes:
+    SessionCookie: {$ref: './openapi.yaml#/components/securitySchemes/SessionCookie'}
+    CsrfToken: {$ref: './openapi.yaml#/components/securitySchemes/CsrfToken'}
+  parameters:
+    Origin: {$ref: './openapi.yaml#/components/parameters/Origin'}
+    Id: {$ref: './openapi.yaml#/components/parameters/Id'}
+    Pagina: {$ref: './openapi.yaml#/components/parameters/Pagina'}
+    Query: {name: q, in: query, schema: {type: string, maxLength: 120}}
+    FileId: {name: fileId, in: path, required: true, schema: {type: string, pattern: '^[1-9]\d{0,19}$'}}
+  requestBodies:
+    Categoria: {required: true, content: {application/json: {schema: {$ref: '#/components/schemas/Categoria'}}}}
+    Unidad: {required: true, content: {application/json: {schema: {$ref: '#/components/schemas/Unidad'}}}}
+    Propiedad: {required: true, content: {application/json: {schema: {$ref: '#/components/schemas/Propiedad'}}}}
+    Oferta: {required: true, content: {application/json: {schema: {$ref: '#/components/schemas/Oferta'}}}}
+    Necesidad: {required: true, content: {application/json: {schema: {$ref: '#/components/schemas/Necesidad'}}}}
+    Estado:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            additionalProperties: false
+            required: [estado, motivo]
+            properties:
+              estado: {type: string, enum: [publicada, pausada, archivada, activa, cerrada]}
+              motivo: {type: string, minLength: 1, maxLength: 500}
+  schemas:
+    Categoria:
+      type: object
+      additionalProperties: false
+      required: [nombre]
+      properties:
+        nombre: {type: string, minLength: 1, maxLength: 80}
+        descripcion: {type: string, maxLength: 4000, default: ''}
+        activo: {type: boolean, default: true}
+    Unidad:
+      type: object
+      additionalProperties: false
+      required: [codigo, nombre, magnitud]
+      properties:
+        codigo: {type: string, minLength: 1, maxLength: 15}
+        nombre: {type: string, minLength: 1, maxLength: 60}
+        magnitud: {type: string, enum: [masa, longitud, area, volumen, piezas]}
+        activo: {type: boolean, default: true}
+    Propiedad:
+      type: object
+      additionalProperties: false
+      required: [nombre, tipo_dato]
+      properties:
+        nombre: {type: string, minLength: 1, maxLength: 60}
+        tipo_dato: {type: string, enum: [numero, texto]}
+        unidad_id: {type: string, nullable: true, default: null}
+        activo: {type: boolean, default: true}
+    Oferta:
+      type: object
+      additionalProperties: false
+      required: [titulo, categoria_id, unidad_id, ubicacion, composicion, estado_material, cantidad_total, modalidad, frecuencia, declaracion_no_peligroso, declaracion_aprovechable]
+      properties:
+        titulo: {type: string, minLength: 1, maxLength: 160}
+        categoria_id: {type: string}
+        unidad_id: {type: string}
+        ubicacion: {type: string, minLength: 1, maxLength: 160}
+        composicion: {type: string, minLength: 1, maxLength: 4000}
+        estado_material: {type: string, enum: [retazo, sobrante, usado_aprovechable, nuevo_sin_uso]}
+        cantidad_total: {type: string, pattern: '^(0|[1-9]\d{0,10})(\.\d{1,3})?$', description: Debe ser estrictamente positiva.}
+        modalidad: {type: string, enum: [venta, donacion, intercambio]}
+        precio_unitario: {type: string, nullable: true, pattern: '^(0|[1-9]\d{0,11})(\.\d{1,2})?$', description: Requerido en venta; null en donación/intercambio.}
+        moneda: {type: string, nullable: true, enum: [CRC, USD, null]}
+        frecuencia: {type: string, enum: [puntual, recurrente]}
+        declaracion_no_peligroso: {type: boolean}
+        declaracion_aprovechable: {type: boolean}
+        propiedades:
+          type: array
+          maxItems: 50
+          description: Sin IDs duplicados; exactamente valor_texto o valor_numero según definición activa de la categoría.
+          items:
+            type: object
+            additionalProperties: false
+            required: [propiedad_id]
+            properties:
+              propiedad_id: {type: string}
+              valor_texto: {type: string, minLength: 1, maxLength: 255}
+              valor_numero: {type: string, pattern: '^-?(0|[1-9]\d{0,9})(\.\d{1,4})?$'}
+    Necesidad:
+      type: object
+      additionalProperties: false
+      required: [titulo, categoria_id, unidad_id, ubicacion, descripcion, cantidad]
+      properties:
+        titulo: {type: string, minLength: 1, maxLength: 160}
+        categoria_id: {type: string}
+        unidad_id: {type: string}
+        ubicacion: {type: string, minLength: 1, maxLength: 160}
+        descripcion: {type: string, minLength: 1, maxLength: 4000}
+        cantidad: {type: string, pattern: '^(0|[1-9]\d{0,10})(\.\d{1,3})?$', description: Estrictamente positiva.}
+        fecha_objetivo: {type: string, format: date, nullable: true}
+        propiedades:
+          type: array
+          maxItems: 50
+          description: Texto o intervalo numérico con mínimo <= máximo; al menos un extremo. IDs no duplicados.
+          items:
+            type: object
+            additionalProperties: false
+            required: [propiedad_id]
+            properties:
+              propiedad_id: {type: string}
+              valor_texto: {type: string, minLength: 1, maxLength: 255}
+              minimo: {type: string, pattern: '^-?(0|[1-9]\d{0,9})(\.\d{1,4})?$'}
+              maximo: {type: string, pattern: '^-?(0|[1-9]\d{0,9})(\.\d{1,4})?$'}
+  responses:
+    Invalid: {$ref: './openapi.yaml#/components/responses/Invalid'}
+    Unauthenticated: {$ref: './openapi.yaml#/components/responses/Unauthenticated'}
+    Denied: {$ref: './openapi.yaml#/components/responses/Denied'}
+    NotFound: {$ref: './openapi.yaml#/components/responses/NotFound'}

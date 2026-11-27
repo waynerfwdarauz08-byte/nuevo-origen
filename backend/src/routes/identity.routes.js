@@ -100,5 +100,29 @@ module.exports = (models, config) => {
       limiter,
     }),
   );
+  router.use(
+    require("./materials.routes")({
+      models,
+      identity: service,
+      auth,
+      protection,
+      limiter,
+    }),
+  );
+  router.use(
+    require("./operations.routes")({ models, auth, protection, limiter }),
+  );
+  router.use(
+    require("./messaging.routes")({ models, auth, protection, limiter }),
+  );
+  router.use(
+    require("./incidents.routes")({ models, auth, protection, limiter }),
+  );
+  router.use(
+    require("./rights.routes")({ models, config, auth, protection, limiter }),
+  );
+  router.use(
+    require("./platform.routes")({ models, auth, protection, limiter }),
+  );
   return router;
 };

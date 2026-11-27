@@ -1,8 +1,8 @@
 # PLAN.md — Plan de implementación
 
 Fecha base: 2026-11-24
-Estado: base local e identidad implementadas; verificación técnica de identidad registrada en TASKS.md y revisión visual pendiente.
-Autorización vigente: ADR 0007 para identidad y ADR 0008 para equipo e invitaciones locales.
+Estado: base, identidad, equipo, materiales y operación locales con evidencia API/MySQL en TASKS.md. Revisión manual nueva y ajustes visuales pendientes.
+Autorización vigente: ADR 0007–0009 para etapas previas; ADR 0010–0013 para destino PostgreSQL, operación y gobernanza local.
 Sin integración de proveedores externos ni publicación.
 
 ## Objetivo
@@ -14,7 +14,8 @@ conforme al anteproyecto.
 ## Reglas de ejecución
 
 - Desarrollar con React + Vite + JavaScript/JSX + React Router y
-  Node.js + Express + MySQL + Sequelize, respetando AGENTS.md.
+  Node.js + Express + Sequelize, respetando AGENTS.md. MySQL aislado sigue
+  operativo; PostgreSQL/Supabase es el destino autorizado, pendiente de migración verificada.
 - No trasladar, reutilizar ni adaptar código, configuración o dependencias
   del prototipo de AI Studio; inspeccionarlo como referencia visual concreta
   según ADR 0006. Se permite reutilizar sus archivos visuales PNG/JPG.
@@ -42,8 +43,9 @@ Decisión indicada por el responsable el 2026-11-24:
   antes de cada integración. Alojamiento productivo antes del despliegue.
 - Libro de marca v1.0 vigente; referencias a identidad pendiente en las
   secciones 17.5 y 18.2–18.4 del anteproyecto quedan como antecedentes desactualizados.
-- Consignas académicas originales no adjuntas; verificar cualquier requisito
-  previo más estricto si se aportan, antes de apartarse de él.
+- Consignas originales localizadas y consultadas el 2026-11-26; PostgreSQL está
+  permitido. ADR 0010 concilia motor, alojamiento y alcance del taller CRM.
+  Comparación de proveedores, costos y pruebas públicas siguen pendientes.
 
 Resolver según la etapa que lo requiera:
 - Entorno MySQL exclusivo de desarrollo y pruebas antes de verificar la base técnica.
@@ -139,7 +141,9 @@ ni responsive por esa aceptación. Ver ADR 0007 y evidencia de pruebas en TASKS.
 Equipo e invitaciones implementados según ADR 0008: entrega manual exclusiva
 de desarrollo, sin envío de correo; funciones combinables, desactivación,
 auditoría y protección concurrente del último administrador verificadas por API/MySQL.
-Recuperación y proveedor de correo quedan pendientes.
+Recuperación manual segura de desarrollo añadida en ADR 0012; proveedor de correo
+y recuperación productiva siguen pendientes. Reactivación conserva funciones
+y exige nuevo login, sin recuperar sesiones revocadas.
 No reiniciar bases: migraciones aditivas y pruebas solo en nuevo_origen_test.
 
 - Registro de empresa y administrador.
@@ -159,6 +163,15 @@ Recorrido manual de las pantallas nuevas y ajustes visuales pendientes.
 
 ## Etapa 3 — Materiales y catálogo
 
+Entrega local implementada según ADR 0009. Ofertas y necesidades propias con
+propiedades, cantidades exactas, estados, fotografías autorizadas y auditoría.
+Catálogos administrables por plataforma; catálogo y perfil empresarial públicos
+con proyección de datos. Pruebas API/MySQL y compilación documentadas; revisión
+manual reportada por el responsable en materiales. Moderación local añadida
+en la etapa de operación; su revisión manual nueva sigue pendiente.
+El inicio conserva el diseño provisional. Solicitudes y acuerdos se implementan
+en la etapa 4; sin IA ni publicación.
+
 - Categorías, unidades y propiedades.
 - Ofertas y necesidades.
 - Imágenes y archivos.
@@ -171,6 +184,17 @@ Una empresa publica y otra encuentra el material.
 Los cambios permanecen al recargar.
 
 ## Etapa 4 — Operación entre empresas
+
+Mejora autorizada 2026-11-27 (ADR 0014): mensajería como módulo propio, con bandeja
+y conversación por solicitud vinculada al acuerdo; idempotencia de envío,
+cursores, actualización periódica y navegación privada común. No añade un chat
+general ajeno a RF-11. Revisar visualmente las pantallas afectadas antes de cerrar
+accesibilidad/responsive; los informes manuales anteriores no cubren este marco.
+
+Implementada localmente por ADR 0011: pruebas API/MySQL, reservas concurrentes,
+intercambio, entregas parciales/idempotentes, uso bilateral, cancelación y revisión
+de casos. Indicadores por periodo y tendencias, seguimiento por etapas y avisos
+de interfaz persistidos. Recorrido manual de pantallas nuevas pendiente.
 
 - Solicitudes.
 - Conversación y seguimiento.
@@ -202,6 +226,11 @@ Casos de prueba por agente, con permisos y fuentes comprobados.
 
 ## Etapa 6 — Automatizaciones y gobernanza funcional
 
+Entrega local parcial (ADR 0012–0013): consentimientos, exportación acotada,
+recepción/revisión de derechos, recuperación manual de desarrollo, cuentas
+globales, borradores y auditoría. Eliminación efectiva, correo, programación
+de limpieza, respaldo/restauración y servicios externos siguen pendientes.
+
 - Tres workflows n8n del anteproyecto.
 - Sincronización autorizada de Google Drive.
 - Correo y notificaciones.
@@ -215,6 +244,13 @@ Salida:
 Integraciones ejecutadas y controles de gobernanza probados.
 
 ## Etapa 7 — Validación y publicación
+
+Destino elegido: frontend Vercel, Express Render y PostgreSQL Supabase. No
+publicado ni migrado. Antes del cambio: ensayo PostgreSQL separado, comparación
+de datos/constraints/decimales, regresión, respaldo y reversión. Ver
+`docs/gobernanza/preparacion-produccion.md` para bloqueos de configuración,
+accesos, almacenamiento y tratamiento de datos. No instalar o conectar un
+CRM externo sin identificarlo; el taller aporta seguimiento por etapas.
 
 - Revisar criterios RF, RNF e historias del anteproyecto.
 - Probar permisos positivos y negativos.
