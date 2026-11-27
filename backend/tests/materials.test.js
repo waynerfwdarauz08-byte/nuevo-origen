@@ -22,7 +22,7 @@ test("cantidades exactas sin redondeo binario", () => {
     assert.equal(id.safeParse(value).success, false);
 });
 test(
-  "materiales y catálogo con MySQL exclusivo",
+  "materiales y catálogo con SQL exclusivo",
   { skip: process.env.RUN_MYSQL_TESTS !== "1" },
   async (t) => {
     process.env.NODE_ENV = "test";

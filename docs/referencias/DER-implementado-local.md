@@ -147,3 +147,26 @@ cuando existe acuerdo; no se mezclan negociaciones diferentes.
 
 La API nueva requiere UUID de envío. Igual autor/clave/solicitud/contenido retorna
 el mensaje previo; otra entrada devuelve 409. Rutas anteriores compatibles.
+# Ampliación IA local — 2026-11-27
+
+Ampliación posterior de chat, migración `20261127000400-chat-nori.js`:
+`conversaciones_ia` contiene titular/empresa, clave cliente, contexto fijo y su
+huella, creación/actualización. `turnos_ia` referencia conversación/titular y
+ejecución opcional única; conserva pregunta, UUID único por titular, estado,
+error y fecha. Índices conversación/id y titular/id para cursores. Preguntas
+privadas recuperables solo por su titular con permisos/contexto vigentes.
+La respuesta permanece en la ejecución; no se duplica en cada turno. ADR 0018.
+
+Migración `20261127000300-agentes-ejecuciones.js`:
+
+- `agentes`: id, código único, nombre, versión de prompt. Ocho registros de catálogo;
+  su existencia no significa ocho agentes completos.
+- `ejecuciones_ia`: FK agente/usuario/empresa nullable; modelo, versión de prompt,
+  UUID cliente, hashes de entrada/contexto, estado, duración, tokens, costo nullable,
+  error, fecha, fuentes JSON y respuesta privada para reintento. Índice único
+  usuario/UUID e índices usuario/fecha y empresa/fecha.
+
+Sin preguntas/prompts completos ni claves. Historial público de API limitado al
+titular y a metadatos. Campos del DER documental, `ejecucion_fuentes` con
+fragmentos, recomendaciones y reportes vinculados siguen pendientes de RAG y
+evaluación, no se sustituyen por tablas ficticias. Ver ADR 0017.

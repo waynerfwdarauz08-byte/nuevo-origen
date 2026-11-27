@@ -8,9 +8,16 @@ export class ApiError extends Error {
 }
 export async function api(
   path,
-  { method = "GET", body, formData, signal, responseType = "json" } = {},
+  {
+    method = "GET",
+    body,
+    formData,
+    signal,
+    responseType = "json",
+    timeoutMs = 15000,
+  } = {},
 ) {
-  const timeout = AbortSignal.timeout(15000);
+  const timeout = AbortSignal.timeout(timeoutMs);
   signal = signal ? AbortSignal.any([signal, timeout]) : timeout;
   const target = new URL(base + path, window.location.origin);
   if (target.origin !== window.location.origin)

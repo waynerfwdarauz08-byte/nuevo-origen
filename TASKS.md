@@ -530,9 +530,9 @@ Pendientes que no se cierran con esta evidencia:
 - [ ] Revisión manual nueva, teclado, responsive y ajustes visuales.
 - [ ] Ejecución integral de RF-22, exportación exhaustiva y tratamiento de respaldos:
   requiere responsable, excepciones y conservación compartida validados.
-- [ ] Proveedor/correo productivo, IA/modelo, documentos/RAG/Drive y tres workflows n8n.
+- [ ] Correo productivo, integración/evaluación real de IA, documentos/RAG/Drive y tres workflows n8n. Proveedor/modelo ya autorizados en ADR 0015.
 - [ ] Eventual CRM externo identificado y autorizado; el taller no fija proveedor.
-- [ ] Ensayo de PostgreSQL, respaldo/restauración, comparación de datos y regresión.
+- [ ] Corte PostgreSQL/Supabase, diferencias de collation, respaldo externo programado y restauración productiva. Ensayo local y regresión registrados abajo; no equivalen al corte.
 - [ ] Configuración productiva, proyectos/accesos, regiones, almacenamiento privado,
   comparación/costos y despliegue Render/Vercel/Supabase. No se publicó el sistema.
 ## Evidencia de mensajería y experiencia — 2026-11-27
@@ -585,3 +585,147 @@ y los tres anchos indicados. No es una ejecución automatizada, observación
 independiente del agente ni comparación de capturas. Los casos opcionales o no
 incluidos explícitamente no se dan por probados. Ajustes visuales pendientes
 conservados. En este registro solo se modificó TASKS.md, sin tocar código.
+
+## Groq autorizado, ensayo SQL y recuperación — 2026-11-27
+
+- [x] Decisión del responsable: Groq/openai/gpt-oss-120b (ADR 0015).
+- [x] Adaptador interno: esquema validado, fuentes limitadas, sin herramientas,
+  timeout 30 s, límites de respuesta/contexto y bloqueo privado sin confirmación ZDR.
+- [x] Cuatro pruebas del adaptador con transporte exclusivo de pruebas.
+- [x] PostgreSQL 17.12 aislado 5433, usuarios y bases de desarrollo/pruebas separados.
+- [x] Baseline PostgreSQL transaccional; migraciones MySQL históricas conservadas.
+- [x] Respaldo cifrado y restauración en MySQL nuevo: 36 tablas/248 filas/1 archivo,
+  conteos y huellas coincidentes, 3,682 s.
+- [x] Copia en PostgreSQL aislado: mismas tablas/filas/archivo, 0,565 s;
+  accesos temporales revocados únicamente en copia, después de compararla.
+- [x] Tres pruebas de respaldo: autenticación del cifrado/manipulación, rutas,
+  y rechazo de importación sobre destino ocupado.
+- [x] Regresión actualizada: `npm run test:mysql` **77/77** y
+  `npm run test:postgres` **77/77**; cero fallos u omisiones en ambas.
+- [x] `git diff --check`: sin errores de whitespace (avisos CRLF del entorno).
+- [ ] Clave Groq configurada de forma privada, confirmación efectiva de retención
+  cero en la cuenta, llamada real y evaluación del modelo. No se enviaron datos.
+- [ ] Ocho agentes integrados, cuotas persistidas, auditoría de ejecuciones y banco
+  de 40 casos. El adaptador por sí solo no completa RF-15 ni RF-23/24.
+- [ ] Documentos/RAG/Drive, correo y tres workflows: continúan pendientes.
+- [ ] Supabase/Render/Vercel: proyectos, credenciales, regiones y almacenamiento
+  privado; el responsable confirmó que todavía no creó los proyectos.
+- [ ] Corte real, collation/ordenación/unicidad, respaldo PostgreSQL nativo,
+  copias externas programadas, supresiones al restaurar y RPO/RTO productivos.
+
+Procedimiento y limitaciones en
+`docs/gobernanza/ensayo-recuperacion-2026-11-27.md`. MySQL 3307 sigue activo;
+no se modificó MySQL80 ni la configuración del backend para cambiar de motor.
+No hay despliegue, push, nuevas pantallas ni nueva evidencia visual en esta entrega.
+
+### Configuración inicial de Groq — 2026-11-27
+
+- [x] `npm run groq:configure`: entrada oculta en terminal interactiva,
+  preservación de variables ajenas, eliminación de duplicados propios y
+  confirmación explícita de retención cero sin activarla por suposición.
+- [x] `npm run groq:check`: una llamada con ficha ficticia, timeout, validación
+  de salida/fuentes y reporte local sin secretos. Sin lectura de datos empresariales.
+- [x] Distinguir rechazo de clave del resto de errores del proveedor sin imprimir
+  respuestas internas. Pruebas focalizadas **6/6**, sin fallos u omisiones.
+- [x] Git confirma exclusión de backend/.env y .local/groq-check.json.
+- [x] Comando de verificación ejecutado: se detuvo por falta de clave; no realizó
+  solicitudes. No confundir ese resultado con conexión aprobada.
+- [ ] Responsable: crear clave y ejecutar configuración privada; confirmar
+  controles reales de retención cero antes de contexto privado.
+- [ ] Ejecutar verificación real y registrar evidencia. Ocho agentes/RAG y
+  evaluación de 40 casos siguen pendientes, sin nuevas pantallas de IA.
+
+Guía: `docs/agentes/configuracion-groq.md`. No se modificaron bases ni frontend.
+
+## Centro de IA con Groq — 2026-11-27
+
+El apartado anterior describe la preparación inicial. Después el responsable
+configuró la clave y confirmó retención cero; reportó `groq:check` exitoso con
+1060 ms y `retencion_cero_confirmada_por_operador=true`. No es verificación
+remota del ajuste de Groq. Esta entrega sí añade tablas y pantalla de IA.
+
+- [x] ADR 0017 y catálogo de ocho agentes con disponibilidad diferenciada.
+- [x] AG-01/02/03/06/07/08: herramientas de lectura, servicios independientes,
+  prompts versionados y respuesta común validada. Centro privado integrado.
+- [x] Permisos actuales y pertenencia antes de recuperar datos; revalidación
+  de sesión/contexto después de llamar al proveedor.
+- [x] Compatibilidad determinista por categoría, unidad, stock y restricciones
+  conocidas; búsqueda acotada, sin garantía técnica ni cobertura exhaustiva.
+- [x] Seguimiento de solicitud/acuerdo/entregas e historial acotado, sin mensajes
+  enviados. Indicadores propios y agregados globales sin empresas identificadas.
+- [x] Revisión de borradores propios/publicaciones de casos asignados sin resolver
+  casos ni consultar evidencia privada excepcional.
+- [x] Cuotas persistidas, UUID/reintentos, concurrencia y espera de Groq sin
+  llamadas automáticas. Trazabilidad, tokens y auditoría sin prompts completos.
+- [x] Migración aditiva aplicada en desarrollo y pruebas de MySQL/PostgreSQL;
+  tablas `agentes`/`ejecuciones_ia`, FK y unicidad usuario/clave.
+- [x] Llamadas reales de los seis agentes con fixtures nuevos en SQL exclusivo
+  de pruebas: respuestas y fuentes válidas. Hubo 429 real tras las tres primeras;
+  los otros agentes aprobaron individualmente después de la espera. No se
+  simularon respuestas ni se enviaron datos de desarrollo como contexto.
+- [x] Suite focalizada final de agentes: **18/18 en cada motor**, incluye plataforma,
+  caso asignado, aislamiento, CSRF, baja durante consulta, fallos, cuotas y rollback.
+- [x] Regresión completa final: `npm run test:mysql` **97/97** y
+  `npm run test:postgres` **97/97**, cero fallos/omisiones. Se corrigió un parámetro
+  SQL del agregado global detectado por la prueba adicional de plataforma;
+  la última ejecución completa incluye esa corrección y el caso de moderación.
+- [x] Frontend: compilación correcta (95 módulos), **4/4** pruebas existentes.
+  No son pruebas visuales de la pantalla nueva.
+- [x] OpenAPI 0.7.0 validado; `/api/health/ready` 200, `/api/ia` 401 sin sesión,
+  ruta frontend `/mi-espacio/ia` 200. No equivale a recorrido con navegador.
+- [x] Respaldo/restauración después de ampliar esquema: **38 tablas, 256 filas,
+  1 archivo**, huellas coincidentes en nueva base; 4,484 s. Origen conservado.
+- [x] `git diff --check` sin errores; búsqueda de patrones de clave privada/Groq
+  en código/docs sin coincidencias (no constituye auditoría exhaustiva).
+- [ ] AG-04/05: corpus aprobado, documentos, fuentes por fragmento e índice RAG.
+- [ ] Banco de 40 casos y evaluación semántica >=80 %, adversariales ampliadas;
+  seis respuestas técnicamente válidas no cierran RNF-19 ni RF-15.
+- [ ] Salidas especializadas por agente, recomendaciones/reportes vinculados,
+  visión/embeddings cuando corresponda, costos con tarifa fechada y purga/plazos.
+- [ ] Prueba manual del Centro de IA, teclado, lector y responsive 360/768/1440.
+  CUA devolvió host de navegador no disponible: sin capturas ni validación visual.
+- [ ] Configuración y límites productivos, despliegue y demás integraciones.
+
+Guía completa: `docs/agentes/entrega-local-2026-11-27.md`. MySQL sigue activo;
+no se modificó MySQL80, no se publicaron servicios ni se hizo push.
+
+## Nori — chat y mascota — 2026-11-27
+
+- [x] ADR 0018: nombre/mascota indicados por el responsable. SVG original de
+  plantita con maceta, expresión amable y colores compatibles con la marca.
+  Logo oficial e inicio conservados. No se usó código del prototipo.
+- [x] Interfaz de chat: mensajes en burbujas, sugerencias sin autoenvío, tema y
+  recurso plegables, fuentes/limitaciones, estado de espera real y errores.
+- [x] Historial SQL privado por titular/empresa, chats nuevos, paginación y
+  recuperación tras recarga. Sin credenciales ni conversaciones en localStorage.
+- [x] Seguimiento con hasta dos intercambios previos acotados desde backend;
+  no se acepta historial de sistema enviado por navegador. Tema/recurso fijos
+  por conversación y revalidación del contexto antes de recuperar historial.
+- [x] Preguntas guardadas exclusivamente para chat (excepción del ADR 0018);
+  aviso visible. Sin preguntas en logs/auditoría. Cuotas/ZDR/permisos conservados.
+- [x] Migración aditiva `20261127000400-chat-nori.js` aplicada en desarrollo y
+  pruebas MySQL/PostgreSQL: `conversaciones_ia`, `turnos_ia`, FK, claves únicas
+  y cursores. Sin reinicios ni eliminación de datos existentes.
+- [x] Pruebas focalizadas Nori **9/9**; regresión completa **106/106 en MySQL**
+  y **106/106 en PostgreSQL**, cero fallos/omisiones. Incluye aislamiento,
+  persistencia, continuidad, CSRF, duplicados, concurrencia, función retirada,
+  claves cruzadas, paginación y turno interrumpido sin llamadas automáticas.
+- [x] Frontend: **6/6** pruebas, incluida fusión de turnos/recarga con IDs grandes;
+  compilación correcta, 98 módulos. No equivalen a prueba visual o de teclado.
+- [x] `npm run nori:evaluate`: dos mensajes reales con Groq y fixtures nuevos
+  exclusivamente en `nuevo_origen_test`; ambos completados, fuentes válidas,
+  Nori identificada y conversación recuperada desde SQL.
+- [x] Ilustración renderizada e inspeccionada en imagen local. No es captura de
+  la interfaz ni acredita comportamiento responsive.
+- [x] OpenAPI 0.8.0 validado; salud 200, conversaciones 401 sin sesión y ruta
+  frontend 200. `git diff --check` sin errores; `.env`, reporte y vista previa
+  local excluidos de Git. No acredita recorrido visual con sesión.
+- [ ] Validación manual de Nori, teclado, lector y 360/768/1440. CUA reintentado:
+  host de navegador no disponible; sin capturas de la pantalla.
+- [ ] RAG/AG-04/05, banco semántico 40 casos y pendientes productivos anteriores.
+- [ ] Plazos/purga, exportación integral y tratamiento de conversaciones al
+  restaurar respaldos; esta entrega no cierra RF-22 ni aprueba políticas finales.
+
+Guía: `docs/agentes/nori.md`. El cambio visual no atribuye capacidades nuevas
+a la IA ni automatiza decisiones empresariales. Sin dependencias nuevas de app,
+push o despliegue. MySQL continúa activo y MySQL80 permanece sin modificaciones.

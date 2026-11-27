@@ -27,6 +27,7 @@ import Incidencias from "../pages/Incidencias.jsx";
 import Derechos, { Recuperacion, Restablecer } from "../pages/Derechos.jsx";
 import Plataforma from "../pages/Plataforma.jsx";
 import Mensajeria from "../pages/Mensajeria.jsx";
+import CentroIA from "../pages/CentroIA.jsx";
 export default function AppRouter() {
   return (
     <BrowserRouter>
@@ -45,6 +46,7 @@ export default function AppRouter() {
             <Route path="aceptar-invitacion" element={<AceptarInvitacion />} />
             <Route path="politicas/:tipo" element={<PoliticaLocal />} />
             <Route element={<RequireSession />}>
+              <Route path="mi-espacio/ia" element={<CentroIA />} />
               <Route path="mi-espacio/mensajes" element={<Mensajeria />} />
               <Route path="mi-espacio/mensajes/:id" element={<Mensajeria />} />
               <Route path="mi-espacio/incidencias" element={<Incidencias />} />

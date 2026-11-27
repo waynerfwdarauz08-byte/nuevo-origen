@@ -1,5 +1,5 @@
 module.exports = (sequelize) => {
-  const { DataTypes: D } = require("sequelize");
+  const D = require("../config/datatypes").dataTypes(sequelize);
   return {
     SolicitudDerecho: sequelize.define(
       "SolicitudDerecho",

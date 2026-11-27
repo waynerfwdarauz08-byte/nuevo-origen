@@ -6,7 +6,7 @@ const { test } = require("node:test"),
   path = require("node:path"),
   sharp = require("sharp");
 test(
-  "operación entre empresas con MySQL exclusivo",
+  "operación entre empresas con SQL exclusivo",
   { skip: process.env.RUN_MYSQL_TESTS !== "1" },
   async (t) => {
     process.env.NODE_ENV = "test";

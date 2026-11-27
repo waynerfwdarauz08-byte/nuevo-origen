@@ -103,3 +103,32 @@ para divulgarlos, indexarlos o enviarlos a un proveedor de IA.
 Necesidades ya definidas como privadas en ADR 0009. Proveedores externos,
 regiones, acceso de responsables, conservación de negocio y resolución integral
 de bajas continúan pendientes; los controles locales no cierran esos riesgos.
+
+## Integración IA local — 2026-11-27
+
+Groq recibe pregunta, ficha/contexto autorizado mínimo y fuentes referenciadas,
+para generar recomendaciones/borradores. No se envían contraseñas, hashes de
+sesión ni claves como parte del contexto de las herramientas. No introducir
+secretos en la pregunta. Sin confirmación humana de ZDR se bloquean consultas.
+
+Persistencia: agentes/versiones y ejecuciones del titular, empresa, modelo,
+estado, duración, tokens, referencias y hashes de entrada/contexto. Sin prompts
+o preguntas completas. Respuesta validada privada para reintentos; listados solo
+metadatos propios. Auditoría de referencia, sin contenido completo. Proveedor
+y límites: ADR 0015/0017. Costos sin tarifa confirmada quedan nulos.
+
+Plazos/purga y exportación exhaustiva de esta categoría siguen pendientes para
+producción; la entrega local no resuelve RF-22. Los respaldos cifrados incluyen
+estas tablas. No existe autorización de despliegue o transferencia productiva
+por el mero éxito de la prueba técnica.
+
+### Chat Nori — historial privado, ADR 0018
+
+El chat solicitado guarda preguntas en `turnos_ia`, enlazadas con conversación,
+titular, empresa y ejecución. Finalidad: recuperar y continuar chats propios.
+El endpoint de consultas aisladas conserva el criterio de no persistir preguntas.
+Logs y auditoría no reciben el texto. Historial acotado recuperado en backend
+se envía a Groq con ZDR confirmado; no constituye fuente nueva de hechos.
+Aviso de guardado visible junto al cuadro de mensaje. Sin localStorage.
+Plazos/purga, exportación integral y supresiones en respaldos siguen pendientes
+antes de producción. Nori no habilita nuevos destinatarios.

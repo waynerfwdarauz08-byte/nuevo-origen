@@ -5,7 +5,7 @@ const { randomUUID, randomBytes, createHash } = require("node:crypto");
 const { execFileSync } = require("node:child_process");
 const path = require("node:path");
 test(
-  "equipo e invitaciones con MySQL exclusivo",
+  "equipo e invitaciones con SQL exclusivo",
   { skip: process.env.RUN_MYSQL_TESTS !== "1" },
   async (t) => {
     process.env.NODE_ENV = "test";

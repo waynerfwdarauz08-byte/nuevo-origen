@@ -58,7 +58,18 @@ No introducir secretos ni datos personales innecesarios.
 Los documentos privados conservarán sus restricciones.
 El sistema debe aplicar esas restricciones antes de consultar IA.
 
-Proveedor y modelo: PENDIENTES según ADR 0001.
+Proveedor y modelo autorizados: Groq/openai/gpt-oss-120b, ADR 0015.
+La implementación local transmite pregunta y contexto mínimo autorizado desde
+backend. La retención cero se configura en la cuenta y confirma el operador;
+no se activa mediante una variable local. Los seis asistentes habilitados y
+los dos documentales pendientes se detallan en ADR 0017. La política sigue
+siendo borrador: no equivale a condiciones productivas aprobadas.
+
+El chat Nori guarda preguntas y respuestas en un historial privado para su
+titular (ADR 0018), con aviso junto al cuadro de mensaje. El backend recupera
+hasta dos intercambios previos acotados para continuar la conversación con Groq.
+Las preguntas no se copian a logs ni auditoría. No introducir claves o datos
+innecesarios. Plazos/purga y políticas productivas siguen pendientes.
 
 ## 7. Errores y correcciones
 

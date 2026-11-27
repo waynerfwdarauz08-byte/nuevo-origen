@@ -1,5 +1,5 @@
 module.exports = function defineIdentity(sequelize, { Rol, Permiso }) {
-  const { DataTypes: D } = require("sequelize");
+  const D = require("../config/datatypes").dataTypes(sequelize);
   const id = () => ({
     type: D.BIGINT.UNSIGNED,
     primaryKey: true,

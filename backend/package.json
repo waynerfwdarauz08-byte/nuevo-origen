@@ -17,7 +17,20 @@
     "mysql:start": "node scripts/local-mysql.js start",
     "mysql:resume": "node scripts/local-mysql.js resume",
     "mysql:stop": "node scripts/local-mysql.js stop",
-    "auth:configure": "node scripts/configure-auth.js"
+    "auth:configure": "node scripts/configure-auth.js",
+    "groq:configure": "node scripts/configure-groq.js",
+    "groq:check": "node --env-file-if-exists=.env scripts/check-groq.js",
+    "groq:evaluate": "node --env-file-if-exists=.env scripts/evaluate-groq.js",
+    "nori:evaluate": "node --env-file-if-exists=.env scripts/evaluate-nori.js",
+    "postgres:setup": "node scripts/postgres-local.js setup",
+    "postgres:resume": "node scripts/postgres-local.js resume",
+    "postgres:stop": "node scripts/postgres-local.js stop",
+    "db:migrate:postgres": "node --env-file-if-exists=.env scripts/postgres.js migrate",
+    "db:seed:postgres": "node --env-file-if-exists=.env scripts/postgres.js seed",
+    "test:postgres": "node --env-file-if-exists=.env scripts/postgres.js test",
+    "recovery:backup": "node --env-file-if-exists=.env scripts/recovery-local.js backup",
+    "recovery:restore-mysql": "node --env-file-if-exists=.env scripts/recovery-local.js restore-mysql",
+    "recovery:copy-postgres": "node --env-file-if-exists=.env scripts/recovery-local.js copy-postgres"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
@@ -28,6 +41,8 @@
     "jsonwebtoken": "^9.0.3",
     "multer": "^2.5.0",
     "mysql2": "^3.15.0",
+    "pg": "^8.23.1",
+    "pg-hstore": "^2.3.4",
     "sequelize": "^6.37.0",
     "sharp": "^0.35.5",
     "zod": "^4.6.7"

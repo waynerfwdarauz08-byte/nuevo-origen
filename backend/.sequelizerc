@@ -2,6 +2,6 @@ const path = require("node:path");
 module.exports = {
   config: path.resolve("src/config/sequelize-cli.cjs"),
   "models-path": path.resolve("src/models"),
-  "migrations-path": path.resolve("migrations"),
+  "migrations-path": path.resolve(require('./src/config/env').readConfig().database.dialect==='postgres'?'migrations-postgres':'migrations'),
   "seeders-path": path.resolve("seeders"),
 };

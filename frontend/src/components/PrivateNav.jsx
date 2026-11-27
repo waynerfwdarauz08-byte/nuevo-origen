@@ -32,6 +32,7 @@ export default function PrivateNav() {
       ? [["/mi-espacio/plataforma", "Plataforma"]]
       : []),
     ["/mi-espacio/avisos", "Avisos"],
+    ...(has("ag01.usar") ? [["/mi-espacio/ia", "Centro de IA"]] : []),
     ["/mi-espacio/derechos", "Privacidad y derechos"],
   ];
   return (

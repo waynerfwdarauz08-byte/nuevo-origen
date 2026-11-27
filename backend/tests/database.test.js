@@ -3,7 +3,7 @@ const assert = require("node:assert/strict");
 const { execFileSync } = require("node:child_process");
 const path = require("node:path");
 test(
-  "MySQL real: migraciones aditivas, seed repetible, permisos mínimos y FK sin reiniciar datos",
+  "SQL real: migraciones aditivas, seed repetible, permisos mínimos y FK sin reiniciar datos",
   { skip: process.env.RUN_MYSQL_TESTS !== "1" },
   async () => {
     // Exclusivamente una base desechable de pruebas; nunca heredar DB_* de desarrollo.
@@ -68,6 +68,10 @@ test(
       await assert.rejects(
         db.query("SELECT * FROM nuevo_origen_development.roles"),
       );
+      if(config.database.dialect==='postgres'){
+        const other=new Sequelize({...config.database,database:'nuevo_origen_development'});
+        try{await assert.rejects(other.authenticate());}finally{await other.close();}
+      }
       run("db:migrate");
       run("db:seed:all");
     } finally {

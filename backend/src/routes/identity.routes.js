@@ -4,7 +4,7 @@ const { createHash } = require("node:crypto");
 const { createIdentityService } = require("../services/identity.service");
 const { csrf } = require("../middlewares/csrf");
 const schemas = require("../schemas/identity");
-module.exports = (models, config) => {
+module.exports = (models, config, aiProvider) => {
   const router = Router();
   const service = createIdentityService(models, config);
   const controller = require("../controllers/identity.controller")(
@@ -35,6 +35,28 @@ module.exports = (models, config) => {
     next();
   };
   const ipLimit = limiter(config.ipLimit);
+  router.use(
+    require("./agents.routes")({
+      models,
+      config,
+      identity: service,
+      auth,
+      protection,
+      limiter,
+      provider: aiProvider,
+    }),
+  );
+  router.use(
+    require("./nori.routes")({
+      models,
+      config,
+      identity: service,
+      auth,
+      protection,
+      limiter,
+      provider: aiProvider,
+    }),
+  );
   const loginLimit = limiter(config.loginLimit, {
     keyGenerator: (req) =>
       ipKeyGenerator(req.ip) +

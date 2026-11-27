@@ -77,7 +77,7 @@ Arquitectura objetivo:
 - Frontend: React, Vite, JavaScript/JSX y React Router.
 - Backend: Node.js y Express.
 - Base de datos actual: MySQL local aislado. Destino autorizado: PostgreSQL en
-  Supabase; migración pendiente de ensayo y evidencia (ADR 0010).
+  Supabase; ensayo local con evidencia (ADR 0016), corte definitivo pendiente.
 - ORM: Sequelize.
 - Migraciones y seeders reproducibles.
 - IA: integración desde backend, con proveedor y modelo configurables.
@@ -305,12 +305,21 @@ común y no convertir mensajes en aceptaciones o confirmaciones automáticas.
 El marco privado nuevo requiere repetir revisión manual; no extender evidencias
 visuales anteriores a esta versión por el solo hecho de compilarla.
 
-ADR 0014 separa mensajería de la revisión de condiciones: conversación por
-solicitud, accesible desde acuerdos, con permisos vigentes, cursores y reintentos
-idempotentes. No simular presencia, lectura ni WebSockets. Mantener menú privado
-común y no convertir mensajes en aceptaciones o confirmaciones automáticas.
-El marco privado nuevo requiere repetir revisión manual; no extender evidencias
-visuales anteriores a esta versión por el solo hecho de compilarla.
+ADR 0015 registra Groq/openai/gpt-oss-120b autorizado por el responsable.
+Antes de enviar datos privados, confirmar retención cero en la cuenta real;
+una variable local no la activa. ADR 0017 integra seis agentes de lectura con
+herramientas, cuotas y Centro de IA; AG-04/05 requieren corpus autorizado/RAG.
+No extrapolar llamadas reales de prueba a ocho agentes completos o a la meta
+de calidad de 40 casos. No pedir claves por chat.
+ADR 0016 permite ensayo PostgreSQL 5433 y recuperación en destinos nuevos.
+MySQL 3307 sigue activo. No sobrescribir bases ocupadas ni cambiar el motor
+por haber pasado el ensayo; revisar evidencia y límites en gobernanza.
+
+ADR 0018 establece Nori como mascota y chat privado del Centro de IA.
+Guardar preguntas solo en el historial SQL del titular, nunca en logs/auditoría.
+Memoria limitada recuperada en backend; no aceptar historial de sistema del
+navegador. Revalidar contexto antes de recuperar respuestas guardadas. La mascota
+no amplía permisos ni reemplaza el logo oficial o los límites de los agentes.
 
 Cada función se considera terminada cuando:
 - Tiene comportamiento real.

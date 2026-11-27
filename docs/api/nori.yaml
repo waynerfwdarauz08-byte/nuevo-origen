@@ -1,0 +1,118 @@
+openapi: 3.0.3
+info: {title: Chat Nori, version: 0.8.0}
+paths:
+  /api/ia/conversaciones:
+    get:
+      summary: Listar hasta 20 chats propios según sesión y permisos
+      security: [{SessionCookie: []}]
+      parameters:
+        - {in: query, name: antes, schema: {type: string, pattern: '^[1-9]\d{0,17}$'}}
+      responses:
+        '200': {description: 'conversaciones con id/contexto/fechas; siguiente es cursor o null. Sin mensajes de otros titulares.'}
+        '401': {description: 'Sesión requerida'}
+    post:
+      summary: Crear chat idempotente con contexto autorizado fijo
+      security: [{SessionCookie: [], CsrfToken: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [clave_cliente, contexto]
+              properties:
+                clave_cliente: {type: string, format: uuid}
+                contexto:
+                  type: object
+                  additionalProperties: false
+                  required: [agente]
+                  properties:
+                    agente: {type: string, enum: [AG-01, AG-02, AG-03, AG-04, AG-05, AG-06, AG-07, AG-08]}
+                    oferta_id: {type: string}
+                    necesidad_id: {type: string}
+                    solicitud_id: {type: string}
+                    caso_id: {type: string}
+                    desde: {type: string, format: date}
+                    hasta: {type: string, format: date}
+      responses:
+        '201': {description: 'id/contexto/creada_en/actualizada_en. Clave y contexto repetidos devuelven el mismo chat; sin llamada al modelo.'}
+        '400': {description: 'Entrada inválida o campo extra. AG-01 solo admite contexto de orientación sin referencias.'}
+        '401': {description: 'Sesión requerida'}
+        '403': {description: 'CSRF o permiso rechazado'}
+        '404': {description: 'Recurso ajeno o inexistente'}
+        '409': {description: 'Clave conflictiva o estado no permitido'}
+        '429': {description: 'Límite 60 intentos/IP/15min'}
+        '503': {description: 'Corpus pendiente AG-04/05'}
+  /api/ia/conversaciones/{id}:
+    parameters:
+      - {$ref: '#/components/parameters/Id'}
+    get:
+      summary: Recuperar conversación y hasta 20 turnos cronológicos autorizados
+      security: [{SessionCookie: []}]
+      parameters:
+        - {in: query, name: antes, schema: {type: string, pattern: '^[1-9]\d{0,17}$'}}
+      responses:
+        '200':
+          description: 'conversacion/turnos/anterior. Reconcilia resultado guardado sin volver a llamar a Groq.'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  conversacion: {type: object}
+                  anterior: {type: string, nullable: true}
+                  turnos: {type: array, items: {$ref: '#/components/schemas/Turno'}}
+        '401': {description: 'Sesión requerida'}
+        '403': {description: 'Permiso retirado'}
+        '404': {description: 'Chat ajeno o inexistente'}
+        '409': {description: 'Contexto cambiado; iniciar otro chat sin revelar historial obsoleto'}
+  /api/ia/conversaciones/{id}/mensajes:
+    parameters:
+      - {$ref: '#/components/parameters/Id'}
+    post:
+      summary: Enviar mensaje privado a Nori con memoria recuperada desde SQL
+      security: [{SessionCookie: [], CsrfToken: []}]
+      description: >-
+        Guarda la pregunta; hasta dos intercambios previos acotados. Rechaza historial,
+        roles o nuevo contexto del cliente. Conserva cuotas/ZDR/timeout de agentes.
+        UUID repetido no duplica mensajes ni llamadas. Sin acciones operativas.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [clave_cliente, pregunta]
+              properties:
+                clave_cliente: {type: string, format: uuid}
+                pregunta: {type: string, minLength: 1, maxLength: 2000}
+      responses:
+        '201': {description: 'turno y reutilizado=false; respuesta real validada.'}
+        '200': {description: 'Turno ya recibido y reutilizado=true; puede estar pendiente. Sin nueva llamada.'}
+        '400': {description: 'Entrada inválida o campo extra'}
+        '401': {description: 'Sesión requerida o revocada'}
+        '403': {description: 'CSRF o permiso rechazado'}
+        '404': {description: 'Chat ajeno o inexistente'}
+        '409': {description: 'Clave conflictiva/comunicación en curso/contexto cambiado'}
+        '429': {description: 'Cuota local o proveedor; consultar turno antes de reenviar'}
+        '503': {description: 'Proveedor/configuración/ZDR o respuesta no disponible'}
+components:
+  securitySchemes:
+    SessionCookie: {type: apiKey, in: cookie, name: no_session}
+    CsrfToken: {type: apiKey, in: header, name: X-CSRF-Token}
+  parameters:
+    Id: {in: path, name: id, required: true, schema: {type: string, pattern: '^[1-9]\d{0,17}$'}}
+  schemas:
+    Turno:
+      type: object
+      properties:
+        id: {type: string}
+        clave_cliente: {type: string, format: uuid}
+        pregunta: {type: string}
+        fecha: {type: string, format: date-time}
+        estado: {type: string, enum: [pendiente, completada, fallida, interrumpida]}
+        respuesta: {type: object, nullable: true, description: 'Texto/fuentes/limitaciones/agentes/datos deterministas. Sin HTML ejecutable.'}
+        error_codigo: {type: string, nullable: true}
+        reintentar_en: {type: string, format: date-time, nullable: true}

@@ -1,6 +1,12 @@
 const express = require("express");
 const { createHealthService } = require("./services/health.service");
-function createApp({ database, models, security, identity = true } = {}) {
+function createApp({
+  database,
+  models,
+  security,
+  identity = true,
+  aiProvider,
+} = {}) {
   const app = express();
   app.disable("x-powered-by");
   app.use(require("./middlewares/requestId"));
@@ -19,6 +25,7 @@ function createApp({ database, models, security, identity = true } = {}) {
       require("./routes/identity.routes")(
         models || require("./models"),
         security || require("./config/security").readSecurity(),
+        aiProvider,
       ),
     );
   app.use(require("./middlewares/notFound"));

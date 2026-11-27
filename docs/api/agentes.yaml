@@ -1,0 +1,100 @@
+openapi: 3.0.3
+info: {title: Agentes locales, version: 0.7.0}
+paths:
+  /api/ia:
+    get:
+      summary: Catálogo de agentes de la sesión y estado de configuración sin secretos
+      security: [{SessionCookie: []}]
+      responses:
+        '200': {description: "Agentes permitidos, disponibilidad real, proveedor y cuotas. Configurado no acredita conexión continua."}
+        '401': {description: "Sesión requerida"}
+  /api/ia/ejecuciones:
+    get:
+      summary: Últimas 30 ejecuciones del titular
+      security: [{SessionCookie: []}]
+      responses:
+        '200': {description: "IDs, agente_id, modelo, fecha, estado, duración, tokens, código y tiempo de espera. Sin preguntas ni respuestas completas."}
+        '401': {description: "Sesión requerida"}
+    post:
+      summary: Consultar un agente con contexto autorizado, sin acciones operativas
+      security: [{SessionCookie: [], CsrfToken: []}]
+      description: >-
+        Cuota persistida 20/usuario y 100/empresa por día UTC; 100 intentos/IP/15min.
+        UUID por usuario: reintento exacto no vuelve a llamar al proveedor.
+        AG-02 requiere oferta propia; AG-03 necesidad propia activa; AG-06 solicitud
+        participante; AG-07 periodo; AG-08 borrador propio o publicación pública de
+        caso asignado. No acepta empresa, roles, instrucciones de sistema ni URLs.
+        AG-04/05 devuelven AI_CORPUS_PENDING. Máximo una llamada, timeout 30s;
+        cliente debe permitir 40s. Revalidación al finalizar. No se envían mensajes.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [agente, pregunta, clave_cliente]
+              properties:
+                agente: {type: string, enum: [AG-01, AG-02, AG-03, AG-04, AG-05, AG-06, AG-07, AG-08]}
+                pregunta: {type: string, minLength: 5, maxLength: 2000}
+                clave_cliente: {type: string, format: uuid}
+                oferta_id: {type: string, pattern: '^[1-9]\d{0,17}$'}
+                necesidad_id: {type: string, pattern: '^[1-9]\d{0,17}$'}
+                solicitud_id: {type: string, pattern: '^[1-9]\d{0,17}$'}
+                caso_id: {type: string, pattern: '^[1-9]\d{0,17}$'}
+                desde: {type: string, format: date}
+                hasta: {type: string, format: date}
+      responses:
+        '201':
+          description: Respuesta validada, fuentes internas autorizadas, limitaciones, agentes usados, datos deterministas, borrador=true y metadatos de ejecución.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Respuesta'}
+        '200': {description: "Respuesta recuperada de consulta completada, mismo contenido/contexto y permisos vigentes. reutilizada=true."}
+        '400': {description: "Entrada, periodo o combinación de campos inválidos"}
+        '401': {description: "Sesión requerida o revocada durante la llamada"}
+        '403': {description: "CSRF o permiso rechazado"}
+        '404': {description: "Recurso inexistente, ajeno o caso no asignado"}
+        '409': {description: "Recurso/estado cambiado, clave conflictiva, consulta pendiente o fallida, o consulta concurrente"}
+        '429': {description: "Cuota local, límite IP o Groq. No reintentar automáticamente; consultar reintentar_en del historial cuando esté disponible."}
+        '503': {description: "Sin configuración/ZDR, corpus pendiente, timeout, salida/cita/cifra inválida o proveedor no disponible. Sin respuestas simuladas."}
+components:
+  schemas:
+    Respuesta:
+      type: object
+      additionalProperties: false
+      required: [respuesta, fuentes, limitaciones, agentes_usados, datos_verificados, borrador, ejecucion, reutilizada]
+      properties:
+        respuesta: {type: string, minLength: 1, maxLength: 12000}
+        fuentes:
+          type: array
+          maxItems: 30
+          items:
+            type: object
+            additionalProperties: false
+            required: [id, titulo, ruta]
+            properties:
+              id: {type: string}
+              titulo: {type: string}
+              ruta: {type: string, description: 'Ruta interna construida por backend; nunca URL elegida por el modelo.'}
+        limitaciones: {type: array, maxItems: 10, items: {type: string, maxLength: 1000}}
+        agentes_usados: {type: array, items: {type: string}}
+        datos_verificados: {type: object, description: 'Candidatos, hallazgos o indicadores recuperados por herramientas; no generados por el LLM.'}
+        borrador: {type: boolean, enum: [true]}
+        reutilizada: {type: boolean}
+        ejecucion:
+          type: object
+          properties:
+            id: {type: string}
+            agente_id: {type: string}
+            modelo: {type: string}
+            estado: {type: string, enum: [pendiente, completada, fallida]}
+            fecha: {type: string, format: date-time}
+            duracion_ms: {type: integer, nullable: true}
+            tokens_entrada: {type: integer, nullable: true}
+            tokens_salida: {type: integer, nullable: true}
+            error_codigo: {type: string, nullable: true}
+            reintentar_en: {type: string, format: date-time, nullable: true}
+  securitySchemes:
+    SessionCookie: {type: apiKey, in: cookie, name: no_session}
+    CsrfToken: {type: apiKey, in: header, name: X-CSRF-Token}

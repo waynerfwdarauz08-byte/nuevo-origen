@@ -1,5 +1,5 @@
 module.exports = (sequelize, m) => {
-  const { DataTypes: D } = require("sequelize"),
+  const D = require("../config/datatypes").dataTypes(sequelize),
     req = (type) => ({ type, allowNull: false }),
     id = () => ({
       type: D.BIGINT.UNSIGNED,

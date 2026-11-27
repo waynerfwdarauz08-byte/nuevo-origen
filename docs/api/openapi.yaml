@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Nuevo Origen — API local
-  version: 0.6.0
+  version: 0.8.0
   description: >-
     Base local, sin despliegue. Registro y login emiten cookie HttpOnly.
     Antes de cada mutación obtener /api/auth/csrf con cookies y enviar el token
@@ -13,6 +13,11 @@ info:
 servers:
   - url: http://127.0.0.1:3001
 paths:
+  /api/ia/conversaciones: {$ref: './nori.yaml#/paths/~1api~1ia~1conversaciones'}
+  /api/ia/conversaciones/{id}: {$ref: './nori.yaml#/paths/~1api~1ia~1conversaciones~1{id}'}
+  /api/ia/conversaciones/{id}/mensajes: {$ref: './nori.yaml#/paths/~1api~1ia~1conversaciones~1{id}~1mensajes'}
+  /api/ia: {$ref: './agentes.yaml#/paths/~1api~1ia'}
+  /api/ia/ejecuciones: {$ref: './agentes.yaml#/paths/~1api~1ia~1ejecuciones'}
   /api/mensajeria/conversaciones: {$ref: './mensajeria.yaml#/paths/~1api~1mensajeria~1conversaciones'}
   /api/mensajeria/conversaciones/{id}: {$ref: './mensajeria.yaml#/paths/~1api~1mensajeria~1conversaciones~1{id}'}
   /api/mensajeria/conversaciones/{id}/mensajes: {$ref: './mensajeria.yaml#/paths/~1api~1mensajeria~1conversaciones~1{id}~1mensajes'}

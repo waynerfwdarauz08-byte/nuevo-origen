@@ -3,7 +3,7 @@
 Fecha base: 2026-11-24
 Estado: base, identidad, equipo, materiales y operación locales con evidencia API/MySQL en TASKS.md. Revisión manual nueva y ajustes visuales pendientes.
 Autorización vigente: ADR 0007–0009 para etapas previas; ADR 0010–0013 para destino PostgreSQL, operación y gobernanza local.
-Sin integración de proveedores externos ni publicación.
+Groq autorizado e integrado localmente según ADR 0015/0017; sin publicación.
 
 ## Objetivo
 
@@ -212,6 +212,17 @@ Verificar concurrencia y consistencia de cantidades.
 
 ## Etapa 5 — IA y documentos
 
+ADR 0018 transforma el Centro de IA en el chat privado de Nori, con preguntas
+y respuestas persistidas, memoria acotada desde SQL y mascota SVG original.
+Conserva seis asistentes habilitados; no cierra RAG ni evaluación semántica.
+
+Proveedor/modelo: Groq/openai/gpt-oss-120b (ADR 0015/0017). Clave configurada
+localmente; retención cero confirmada por el responsable, no verificada por API.
+AG-01/02/03/06/07/08 con herramientas y llamadas reales de prueba; Centro de IA
+privado, cuotas, trazabilidad y reintentos. AG-04/05 requieren corpus autorizado
+y RAG. Faltan evaluación de 40 casos, visión/embeddings cuando corresponda y
+controles productivos. No declarar la etapa completa.
+
 - Implementar los ocho agentes definidos en el anteproyecto.
 - Integración configurable desde backend.
 - Herramientas limitadas y salidas validadas.
@@ -244,6 +255,11 @@ Salida:
 Integraciones ejecutadas y controles de gobernanza probados.
 
 ## Etapa 7 — Validación y publicación
+
+Ensayo local PostgreSQL y recuperación ejecutado según ADR 0016 y
+`docs/gobernanza/ensayo-recuperacion-2026-11-27.md`. Coincidieron tablas, registros
+y archivo del respaldo. MySQL sigue activo. Corte, Supabase real, backups externos
+programados y publicación continúan pendientes; no reemplazar datos existentes.
 
 Destino elegido: frontend Vercel, Express Render y PostgreSQL Supabase. No
 publicado ni migrado. Antes del cambio: ensayo PostgreSQL separado, comparación

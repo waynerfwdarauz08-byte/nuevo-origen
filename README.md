@@ -517,3 +517,44 @@ los criterios de AGENTS.md y tiene evidencia en TASKS.md.
 
 Pendiente de infraestructura, verificación funcional,
 políticas finales y autorización del responsable.
+
+## Ensayo SQL y respaldo local
+
+MySQL 3307 sigue activo. PostgreSQL 5433 se usa en paralelo para compatibilidad;
+no se cambió el motor ni se conectó Supabase. Desde `backend/`:
+`npm run postgres:resume`, `npm run test:postgres` y `npm run recovery:backup`.
+Para restaurar, seguir el [procedimiento y límites](docs/gobernanza/ensayo-recuperacion-2026-11-27.md).
+No borrar ni reutilizar bases para repetir el ensayo.
+
+## Groq y Centro de IA local
+
+El Centro de IA ahora es el chat de **Nori**, una plantita asistente. Conversaciones
+privadas guardadas en SQL, preguntas de seguimiento y fuentes por respuesta.
+Ver [guía de Nori y pruebas manuales](docs/agentes/nori.md). No compartir claves
+en el chat. La mascota conserva la identidad visual y el logo oficial.
+
+ADR 0015 registra Groq con `openai/gpt-oss-120b`. El adaptador interno tiene
+validación estructural, comprobación de fuentes, límites de contexto/respuesta,
+timeout de 30 s y errores depurados. Las herramientas de lectura se ejecutan
+en backend con permisos; el modelo no elige ni ejecuta acciones libremente.
+Centro privado: `/mi-espacio/ia`. AG-01/02/03/06/07/08 conectados a Groq;
+AG-04/05 pendientes de corpus autorizado y RAG. No hay visión ni Drive conectados.
+
+Configurar `GROQ_API_KEY` exclusivamente en el entorno privado del backend.
+No enviarla por chat ni guardarla en Git. `GROQ_ZDR_CONFIRMED=true` solo registra
+confirmación humana de los controles reales en la cuenta de Groq; no configura
+al proveedor. Sin confirmación, el adaptador bloquea contexto privado.
+Se verificaron llamadas reales con datos ficticios en la base de pruebas;
+la evaluación semántica de 40 casos sigue pendiente.
+
+Primera configuración: desde `backend/`, ejecutar `npm run groq:configure`
+(clave oculta) y después `npm run groq:check` (solicitud con datos ficticios).
+Ver [pasos completos y límites](docs/agentes/configuracion-groq.md).
+No enviar la clave por chat. Reiniciar backend tras modificar su entorno.
+
+Guía de [funciones, evidencia y prueba manual](docs/agentes/entrega-local-2026-11-27.md).
+API: `GET /api/ia`, `GET/POST /api/ia/ejecuciones`. Cuotas persistidas de desarrollo:
+20 consultas/usuario y 100/empresa por día UTC; Groq puede imponer límites menores.
+`npm run groq:evaluate -- AG-06` verifica un agente con fixtures nuevos y consumo
+real de Groq, exclusivamente en SQL de pruebas. No ejecutar repetidamente para
+eludir límites; no equivale al banco de calidad. Sin argumento intenta seis casos.

@@ -28,7 +28,7 @@ test("cookies previstas para HTTPS y validación de configuración de identidad"
   );
 });
 test(
-  "identidad real con MySQL exclusivo: registro, sesión, permisos y aislamiento",
+  "identidad real con SQL exclusivo: registro, sesión, permisos y aislamiento",
   { skip: process.env.RUN_MYSQL_TESTS !== "1" },
   async (t) => {
     process.env.NODE_ENV = "test";
